@@ -1,0 +1,102 @@
+:root {
+    --wr-color: #FFD700;
+    --qb-color: #00D40B;
+    --ball-color: #CA883D;
+    --scrimmage-color: #FFFFFF;
+    --field-bg: #0a300a;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--field-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#app-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#field-canvas {
+    position: relative;
+    width: 100%;
+    /* iPhone aspect ratio */
+    max-width: calc(100vh * (9 / 19.5));
+    height: 100%;
+    background-image: url('field.svg'); /* Optimized SVG field */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.player-entity {
+    position: absolute;
+    width: 30px; /* Base size, can be adjusted */
+    height: 30px;
+    will-change: transform; /* Hint to the browser for hardware acceleration */
+}
+
+.player-entity svg {
+    width: 100%;
+    height: 100%;
+}
+
+.player-wr { color: var(--wr-color); }
+.player-qb { color: var(--qb-color); }
+
+.line-of-scrimmage {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--scrimmage-color);
+    transform: translateY(0); /* Will be positioned by JS */
+}
+
+#ui-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    color: white;
+    text-align: center;
+}
+
+#route-info-display {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+#route-selector {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#route-selector li {
+    padding: 8px 16px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#route-selector li.active,
+#route-selector li:hover {
+    background-color: rgba(255, 215, 0, 0.5);
+}
