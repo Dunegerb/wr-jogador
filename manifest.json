@@ -1,19 +1,19 @@
 {
-  "name": "WR Route Runner",
-  "short_name": "RouteRunner",
-  "description": "An animated visualizer for fundamental wide receiver routes.",
+  "name": "RouteMaster",
+  "short_name": "RouteMaster",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#4A7729",
-  "theme_color": "#4A7729",
+  "background_color": "#0a300a",
+  "theme_color": "#0a300a",
+  "description": "Professional WR route visualization tool.",
   "icons": [
     {
-      "src": "icon-192x192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512x512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
