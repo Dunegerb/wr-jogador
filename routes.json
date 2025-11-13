@@ -1,0 +1,53 @@
+[
+  {
+    "id": "slant",
+    "name": "1. Slant",
+    "description": "A quick, three-step route cutting sharply inwards.",
+    "initialPositions": {
+      "WR1": { "x": -20, "y": 0 },
+      "QB1": { "x": 0, "y": -5 },
+      "BALL": { "x": 0, "y": 0.5 }
+    },
+    "path": [
+      { "entityId": "WR1", "type": "line", "end": { "x": -20, "y": 3 }, "duration": 400 },
+      { "entityId": "WR1", "type": "curve", "end": { "x": -10, "y": 13 }, "controlPoint": { "x": -20, "y": 8 }, "duration": 1000 }
+    ],
+    "snapAnimation": {
+        "entityId": "BALL", "type": "line", "end": {"x": 0, "y": -4.5}, "duration": 250, "delay": 100
+    }
+  },
+  {
+    "id": "post",
+    "name": "2. Post",
+    "description": "A deep route with a sharp cut towards the field's center ('goalposts').",
+    "initialPositions": {
+      "WR1": { "x": 25, "y": 0 },
+      "QB1": { "x": 0, "y": -5 },
+      "BALL": { "x": 0, "y": 0.5 }
+    },
+    "path": [
+      { "entityId": "WR1", "type": "line", "end": { "x": 25, "y": 12 }, "duration": 1200 },
+      { "entityId": "WR1", "type": "line", "end": { "x": 5, "y": 27 }, "duration": 1500 }
+    ],
+    "snapAnimation": {
+        "entityId": "BALL", "type": "line", "end": {"x": 0, "y": -4.5}, "duration": 250, "delay": 100
+    }
+  },
+  {
+    "id": "out",
+    "name": "3. Out",
+    "description": "A route with a sharp, 90-degree cut towards the sideline.",
+    "initialPositions": {
+      "WR1": { "x": -30, "y": 0 },
+      "QB1": { "x": 0, "y": -5 },
+      "BALL": { "x": 0, "y": 0.5 }
+    },
+    "path": [
+      { "entityId": "WR1", "type": "line", "end": { "x": -30, "y": 10 }, "duration": 1000 },
+      { "entityId": "WR1", "type": "line", "end": { "x": -45, "y": 10 }, "duration": 800 }
+    ],
+    "snapAnimation": {
+        "entityId": "BALL", "type": "line", "end": {"x": 0, "y": -4.5}, "duration": 250, "delay": 100
+    }
+  }
+]
