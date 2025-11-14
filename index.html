@@ -2,513 +2,552 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- PWA / Apple Native Feel Meta Tags -->
     <title>Route Genesis</title>
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Route Genesis">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png"> 
+    
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png"> <!-- Você precisará criar este ícone usando o capacete -->
-    <link rel="manifest" href="manifest.json"> <!-- E este arquivo manifest -->
 
     <style>
-        /* === 1. FUNDAÇÃO E PRINCÍPIOS DE DESIGN (CSS) === */
-        
-        /* -- Paleta de Cores e Variáveis -- */
         :root {
             --bg-primary: #000000;
             --bg-secondary: #1C1C1E;
-            --accent-primary: #00D40B;
+            --accent-color: #00D40B;
             --text-primary: #FFFFFF;
             --text-secondary: rgba(235, 235, 245, 0.6);
-            --border-color: rgba(84, 84, 88, 0.65);
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --tab-bar-height: 84px; /* Altura padrão com safe area */
-            --safe-area-bottom: env(safe-area-inset-bottom);
+            --divider-color: rgba(84, 84, 88, 0.65);
+            --safe-area-inset-top: env(safe-area-inset-top);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
         }
 
-        /* -- Reset e Base -- */
-        * {
+        *, *::before, *::after {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         html, body {
             height: 100%;
             width: 100%;
             overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            font-family: var(--font-family);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
         }
-
-        /* === 2. ESTRUTURA DO APLICATIVO === */
 
         #app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            width: 100vw;
-            background: var(--bg-primary);
-        }
-
-        #main-content {
-            flex-grow: 1;
+            width: 100%;
+            height: 100%;
             position: relative;
-            overflow: hidden;
         }
 
-        /* -- Sistema de Navegação de Views -- */
-        .view {
+        .page {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            padding: 20px 20px calc(var(--tab-bar-height) + 10px) 20px;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), visibility 0.3s;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* Rolagem fluida no iOS */
-        }
-        
-        .view.active {
-            opacity: 1;
-            visibility: visible;
+            display: none;
+            flex-direction: column;
+            background-color: var(--bg-primary);
+            padding-bottom: calc(50px + var(--safe-area-inset-bottom));
         }
 
-        /* -- Tab Bar (Navegação Principal) -- */
+        .page.active {
+            display: flex;
+        }
+        
+        .page-header {
+            padding: 16px 20px;
+            padding-top: calc(16px + var(--safe-area-inset-top));
+            background-color: rgba(28, 28, 30, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--divider-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .page-header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 0.37px;
+        }
+        
+        .page-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #playbook-page .page-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #field-canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .playback-controls {
+            position: absolute;
+            bottom: calc(60px + var(--safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            padding: 10px;
+            background: rgba(28, 28, 30, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .playback-controls button {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            padding: 8px;
+        }
+        .playback-controls button svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        #theory-page .page-content {
+            padding: 0 20px;
+        }
+        
+        #theory-page article h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--divider-color);
+            padding-bottom: 8px;
+        }
+
+        #theory-page article h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 24px;
+            margin-bottom: 12px;
+            color: var(--accent-color);
+        }
+
+        #theory-page article p {
+            font-size: 17px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+        #theory-page article p strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        #theory-page article table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 15px;
+        }
+        #theory-page article th, #theory-page article td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--divider-color);
+        }
+        #theory-page article th {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        #theory-page article td {
+            color: var(--text-secondary);
+        }
+
+        .list-container {
+            list-style: none;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--divider-color);
+        }
+        .list-item:first-child {
+             border-top-left-radius: 12px;
+             border-top-right-radius: 12px;
+        }
+        .list-item:last-child {
+             border-bottom-left-radius: 12px;
+             border-bottom-right-radius: 12px;
+             border-bottom: none;
+        }
+        .list-item .icon {
+            margin-right: 16px;
+        }
+        .list-item .icon svg {
+            width: 28px;
+            height: 28px;
+        }
+        .list-item .text h4 {
+            font-size: 17px;
+            font-weight: 600;
+        }
+        .list-item .text p {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        #creator-page .page-content {
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             overflow: hidden;
+             position: relative;
+        }
+
+        #creator-canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .creator-toolbar {
+            position: absolute;
+            top: calc(16px + var(--safe-area-inset-top));
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(28, 28, 30, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .creator-toolbar button {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            padding: 8px;
+        }
+         .creator-toolbar button svg {
+            width: 24px;
+            height: 24px;
+        }
+
         #tab-bar {
             position: fixed;
             bottom: 0;
             left: 0;
-            right: 0;
-            height: var(--tab-bar-height);
-            padding-bottom: var(--safe-area-bottom);
+            width: 100%;
+            height: calc(50px + var(--safe-area-inset-bottom));
+            background: rgba(28, 28, 30, 0.7);
+            backdrop-filter: blur(27px);
+            -webkit-backdrop-filter: blur(27px);
+            border-top: 1px solid var(--divider-color);
             display: flex;
             justify-content: space-around;
             align-items: flex-start;
-            padding-top: 10px;
-            background-color: rgba(28, 28, 30, 0.85); /* Cor translúcida */
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-top: 0.5px solid var(--border-color);
+            padding-top: 5px;
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
         }
 
         .tab-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
             background: none;
             border: none;
             color: var(--text-secondary);
             font-size: 10px;
-            font-weight: 500;
+            flex: 1;
+            padding-top: 4px;
+            gap: 2px;
             transition: color 0.2s ease-in-out;
-            cursor: pointer;
         }
-        
-        .tab-item .icon {
-            width: 28px;
-            height: 28px;
-        }
-
-        .tab-item .icon svg {
-            width: 100%;
-            height: 100%;
-            fill: var(--text-secondary);
-            transition: fill 0.2s ease-in-out;
+        .tab-item svg {
+            width: 26px;
+            height: 26px;
+            margin-bottom: 2px;
         }
 
         .tab-item.active {
-            color: var(--accent-primary);
+            color: var(--accent-color);
         }
 
-        .tab-item.active .icon svg {
-            fill: var(--accent-primary);
+        .tab-item .icon path {
+            transition: fill 0.2s ease-in-out;
         }
 
-
-        /* === 3. ESTILIZAÇÃO DAS VIEWS ESPECÍFICAS === */
-
-        /* -- View: Teoria -- */
-        #theory-view h1 {
-            font-size: 34px;
-            font-weight: 700;
-            letter-spacing: 0.37px;
-            margin-bottom: 24px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 16px;
+        .tab-item.active .icon {
+            fill: var(--accent-color);
         }
-
-        #theory-view h2 {
-            font-size: 22px;
-            font-weight: 700;
-            margin-top: 32px;
-            margin-bottom: 16px;
-        }
-
-        #theory-view h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-top: 24px;
-            margin-bottom: 12px;
-        }
-
-        #theory-view p, #theory-view li {
-            font-size: 17px;
-            line-height: 1.5;
-            letter-spacing: -0.41px;
-            color: var(--text-primary);
-            margin-bottom: 16px;
-        }
-        
-        #theory-view strong {
-            font-weight: 600;
-            color: var(--accent-primary);
-        }
-
-        #theory-view ul {
-            list-style-position: inside;
-            padding-left: 10px;
-        }
-
-        .reference {
-            display: inline-block;
-            background-color: var(--bg-secondary);
-            color: var(--accent-primary);
-            font-size: 12px;
-            font-weight: 700;
-            width: 20px;
-            height: 20px;
-            line-height: 20px;
-            text-align: center;
-            border-radius: 50%;
-            margin-left: 2px;
-            vertical-align: super;
-            cursor: pointer;
-        }
-        
-        #theory-view table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 24px;
-            background-color: var(--bg-secondary);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        #theory-view th, #theory-view td {
-            text-align: left;
-            padding: 12px 16px;
-            font-size: 15px;
-            border-bottom: 0.5px solid var(--border-color);
-        }
-
-        #theory-view th {
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        #theory-view tr:last-child td {
-            border-bottom: none;
-        }
-        
-        /* -- Placeholder para outras views -- */
-        .placeholder-view {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            gap: 20px;
-        }
-        .placeholder-view h1 {
-            font-size: 28px;
-            font-weight: 600;
-        }
-        .placeholder-view p {
-            font-size: 17px;
-            color: var(--text-secondary);
-            max-width: 300px;
-        }
-        .placeholder-view .icon {
-            width: 80px;
-            height: 80px;
-        }
-        .placeholder-view .icon svg {
-            fill: var(--accent-primary);
+        .tab-item:not(.active) .icon {
+            fill: var(--text-secondary);
         }
     </style>
 </head>
 <body>
-    
-    <div id="app-container">
-        <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
-        <main id="main-content">
 
-            <!-- View 1: Playbook (Campo de Treino) -->
-            <section id="playbook-view" class="view active placeholder-view">
-                <div class="icon">
-                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                </div>
-                <h1>Playbook Interativo</h1>
-                <p>O campo de treino visual será renderizado aqui com WebGL/Canvas para máxima performance.</p>
-            </section>
+    <main id="app-container">
+        <div id="playbook-page" class="page active">
+            <div class="page-content">
+                <canvas id="field-canvas"></canvas>
+            </div>
+            <div class="playback-controls">
+                 <button id="reset-btn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4.5C15.83 4.5 19.05 7.14 19.89 10.87L22 9V15H16L18.23 12.77C17.55 9.94 15.02 7.5 12 7.5C8.69 7.5 6 10.19 6 13.5C6 16.81 8.69 19.5 12 19.5C13.62 19.5 15.09 18.91 16.2 17.97L17.62 19.39C16.14 20.87 14.17 21.5 12 21.5C7.3 21.5 3.5 17.95 3.5 13.5C3.5 9.05 7.3 4.5 12 4.5Z" fill="currentColor"/></svg>
+                </button>
+                <button id="play-pause-btn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5V19L19 12L8 5Z" fill="currentColor"/></svg>
+                </button>
+                 <button id="camera-btn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 10.5C12.83 10.5 13.5 11.17 13.5 12C13.5 12.83 12.83 13.5 12 13.5C11.17 13.5 10.5 12.83 10.5 12C10.5 11.17 11.17 10.5 12 10.5ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM17 14.2C17 15.19 16.19 16 15.2 16H8.8C7.81 16 7 15.19 7 14.2V9.8C7 8.81 7.81 8 8.8 8H15.2C16.19 8 17 8.81 17 9.8V14.2Z" fill="currentColor"/></svg>
+                </button>
+            </div>
+        </div>
 
-            <!-- View 2: Teoria (Conteúdo) -->
-            <section id="theory-view" class="view">
-                <!-- Conteúdo será injetado pelo JavaScript -->
-            </section>
+        <div id="theory-page" class="page">
+            <header class="page-header">
+                <h1>Manual do WR</h1>
+            </header>
+            <div class="page-content">
+                <article>
+                    <h2>Parte 1: A Fundação da Grandeza: Posição (Stance) e Saída (Start)</h2>
+                    <p>O sucesso de um Wide Receiver (WR) em qualquer rota começa antes do snap. A fundação de toda a execução é a posição (stance) e a saída (start). Uma base falha leva a movimentos desperdiçados, o que destrói o timing da jogada e alerta o defensor (DB).</p>
+                    <h3>1.1 A Posição Perfeita (The Perfect Stance)</h3>
+                    <p>O objetivo da posição é criar uma plataforma para explosão em qualquer direção (vertical, interna, externa) sem "telegrafar" a intenção.</p>
+                    <p><strong>Mecânica (WR Externo - 3 Pontos Modificado):</strong></p>
+                    <p><strong>Pés:</strong> O pé interno (inside foot) deve estar à frente. O peso deve ser carregado no arco (arch) do pé da frente (cerca de 60-70%). O pé de trás serve de equilíbrio, posicionado na ponta dos pés, pronto para impulsionar.</p>
+                    <p><strong>Nível (Pad Level):</strong> A mentalidade é "olhos sobre os dedos" (eyes over toes). O peito deve estar inclinado sobre o joelho da frente, e os joelhos devem estar dobrados. A posição deve se assemelhar a um power clean (arranque de potência), carregada e pronta para explodir, não para descansar.</p>
+                    <p><strong>Mãos:</strong> As mãos devem estar relaxadas, mas prontas. "Mãos violentas" (violent hands) contra o press começam com uma posição relaxada que permite a reação mais rápida.</p>
+                    <p><strong>Mecânica (Slot Receiver - 2 Pontos):</strong></p>
+                    <p><strong>Posição:</strong> O WR do slot geralmente usa uma posição de 2 pontos (em pé). Isso permite uma melhor visão pré-snap dos Linebackers (LBs) e Safeties, facilitando a leitura de blitzes ou rotações de cobertura.</p>
+                    <p><strong>Variação de Peso:</strong> O peso pode ser 50/50 para rotas de opção e quebras rápidas, ou ligeiramente inclinado para a frente para releases verticais.</p>
+                    <h3>1.2 A Saída Explosiva (The Explosive Start)</h3>
+                    <p>O inimigo número um de um WR novato é o "Falso Passo" (False Step). Qualquer movimento que não ganhe terreno (um passo para trás para "se arrumar", um passo lateral desnecessário) é um movimento desperdiçado.</p>
+                    <p><strong>Técnica:</strong> A saída deve ser uma impulsão simultânea de ambos os pés. O primeiro passo deve ganhar terreno, seja verticalmente contra off-coverage, ou lateralmente em um release calculado contra press.</p>
+                    <p><strong>Causa e Efeito:</strong> A saída dita o timing da jogada. Em um conceito de quick game (jogo rápido), o Quarterback (QB) está jogando a bola em um local e tempo específicos. Se um Slant de 3 passos leva 4 passos para ser executado por causa de uma saída lenta, a bola será interceptada ou cairá no chão.</p>
+                    
+                    <h2>Parte 2: Vencendo na Linha de Scrimmage: O Manual de Releases</h2>
+                    <p>Vencer o press coverage é uma mentalidade. O DB está tentando ditar os termos da jogada; o release é o WR tomando esse controle de volta. O objetivo não é desviar do DB; é derrotá-lo.</p>
+                    <h3>2.1 Lendo o Leverage (Vantagem) do Defensor</h3>
+                    <p>Antes do snap, o WR deve diagnosticar o leverage (a vantagem de posição) do DB. Isso informa qual ferramenta (release) usar.</p>
+                    <p><strong>Inside Shade (Sombra Interna):</strong> O DB está alinhado por dentro do WR. Ele está protegendo o Slant e o Post. Ele está dando ao WR a rota Fade (vertical externa).</p>
+                    <p><strong>Outside Shade (Sombra Externa):</strong> O DB está alinhado por fora do WR. Ele está protegendo o Fade e o Out. Ele está dando ao WR o Slant.</p>
+                    <p><strong>Head-up (De Frente):</strong> O DB está neutro, tentando forçar o WR a declarar sua intenção primeiro.</p>
+                    <h3>2.2 Biblioteca de Releases Físicos (Contra Press-Man)</h3>
+                    <p>O objetivo contra press-man é recriar a linha de scrimmage e "empilhar" (stack) o DB—colocando-se diretamente na frente dele.</p>
+                    <p><strong>Técnicas de Mão (Hand Techniques):</strong></p>
+                    <p>A primeira fase do release envolve "pés violentos" e "mãos violentas" para derrotar o jam (o soco) do DB.</p>
+                    <p><strong>Double Hand SWAT:</strong> A técnica fundamental. Quando o DB atira as duas mãos (o punch), o WR usa um "swat" (um tapa) violento e simultâneo para limpar as duas mãos. Imediatamente após o contato, o WR deve acelerar.</p>
+                    <p><strong>Clip and Rip:</strong> Usado quando o DB tenta um jam com uma mão. O WR usa sua mão interna para "grampear" (clip) o pulso ou cotovelo do DB contra seu próprio corpo, e então "rasga" (rip) seu braço externo por baixo (como um uppercut) para passar. Ao fazer isso, o WR deve "ficar o mais fino possível" (get as skinny as possible) para reduzir a área de superfície.</p>
+                    
+                    <h3>2.3 Biblioteca de Releases de Finesse (Contra Off-Man / Soft Press)</h3>
+                    <p>Contra cobertura off (recuada) ou soft press, o objetivo é a decepção: fazer o DB "morder" uma rota falsa ou "virar os quadris" (flip his hips) na direção errada.</p>
+                    
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Se o DB está...</th>
+                          <th>E sua Rota é...</th>
+                          <th>Sua Ferramenta (Release) é...</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Press, Inside Shade</td>
+                          <td>Fade / Go Route</td>
+                          <td>Split Release (para fora), seguido de SWAT/Rip para empilhar.</td>
+                        </tr>
+                        <tr>
+                          <td>Press, Outside Shade</td>
+                          <td>Fade / Go Route</td>
+                          <td>Split Release (para dentro), seguido de SWAT/Rip para empilhar.</td>
+                        </tr>
+                        <tr>
+                          <td>Press, Outside Shade</td>
+                          <td>Slant</td>
+                          <td>Diamond Release (3 passos para o ombro externo) ou Dive Release (ataca a face).</td>
+                        </tr>
+                        <tr>
+                            <td>Press, Inside Shade</td>
+                            <td>Post</td>
+                            <td>Ataca o leverage (para dentro) para fazê-lo morder, depois Rip por cima para empilhar.</td>
+                        </tr>
+                        <tr>
+                            <td>Off-Man (Recuado)</td>
+                            <td>Go / Fade</td>
+                            <td>Ataque o "cushion" (almofada/espaço) dele, depois use o Blade Release no topo.</td>
+                        </tr>
+                        <tr>
+                            <td>Off-Man (Recuado)</td>
+                            <td>Comeback</td>
+                            <td>Ataque o "cushion" verticalmente para fazê-lo virar os quadris, então quebre.</td>
+                        </tr>
+                      </tbody>
+                    </table>
 
-            <!-- View 3: Biblioteca (Glossário) -->
-            <section id="library-view" class="view placeholder-view">
-                <div class="icon">
-                    <!-- Capacete WR SVG -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="56" height="50" viewBox="0 0 56 50" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.6262 15.4445C15.8549 16.643 18.775 19.072 20.1404 22.0848C20.5135 22.908 20.4131 23.8685 19.8779 24.597C19.7808 24.7293 19.6865 24.8635 19.5951 25H19.6233H19.6878H19.7522H19.8165H19.8807H19.9448H20.0087H20.0725H20.1362H20.1998H20.2632H20.3265H20.3897H20.4527H20.5156H20.5784H20.641H20.7035H20.7658H20.828H20.89H20.9519H21.0136H21.0752H21.1366H21.1979H21.259H21.3199H21.3807H21.4413H21.5017H21.5619H21.622H21.6819H21.7417H21.8012H21.8606H21.9198H21.9788H22.0376H22.0963H22.1547H22.213H22.271H22.3289H22.3866H22.444H22.5013H22.5584H22.6152H22.6718H22.7283H22.7846H22.8406H22.8963H22.9518H23.0073H23.0623H23.1173H23.1721H23.2263H23.2806H23.3346H23.3883H23.4421H23.4953H23.5483H23.6011H23.6536H23.7061H23.7581H23.8098H23.8616H23.9128H23.9638H24.0146H24.0653H24.1156H24.1656H24.2153H24.2648H24.3141H24.3631H24.4116H24.4601H24.5083H24.5561H24.6036H24.6508H24.6981H24.7446H24.7911H24.8373H24.8831H24.9286H24.9738H25.0188H25.0636H25.1078H25.1521H25.1958H25.2391H25.2823H25.3251H25.3676H25.4098H25.4518H25.4933H25.5346H25.5753H25.6161H25.6563H25.6963H25.7358H25.7751H25.8141H25.8526H25.8696C26.7341 23.5055 28.3501 22.5 30.2008 22.5C32.9621 22.5 35.2008 24.7385 35.2008 27.5C35.2008 30.2615 32.9621 32.5 30.2008 32.5C29.7846 32.5 29.3803 32.4493 28.9938 32.3533L23.9313 38.4282C23.8896 39.404 23.7791 40.3085 23.5936 41.145C25.1866 42.0093 27.0113 42.5 28.9511 42.5C32.4436 42.5 35.5631 40.9115 37.6303 38.408C38.1053 37.833 38.8123 37.5 39.5581 37.5H45.8143C48.5606 34.075 50.2008 29.7317 50.2008 25C50.2008 13.9543 41.2466 5 30.2008 5C22.6191 5 16.0179 9.21972 12.6262 15.4445ZM21.3224 45.6017C23.5971 46.8132 26.1938 47.5 28.9511 47.5C33.5601 47.5 37.7223 45.5785 40.6771 42.5H46.9716C47.6828 42.5 48.3603 42.1973 48.8346 41.6673C52.7916 37.246 55.2008 31.4012 55.2008 25C55.2008 11.1929 44.0081 0 30.2008 0C19.4499 0 10.29 6.78503 6.75761 16.2982C6.48678 17.0276 6.57098 17.8415 6.98538 18.5C7.39981 19.1585 8.09718 19.5866 8.87196 19.6579C11.1981 19.8722 13.5991 21.301 14.921 23.0468C14.5546 23.6723 14.2287 24.3245 13.9471 25H13.9284H13.8614H13.7944H13.7275H13.6607H13.5939H13.5272H13.4605H13.3939H13.3274H13.2609H13.1946H13.1283H13.0621H12.9959H12.9298H12.8639H12.798H12.7322H12.6665H12.6008H12.5353H12.4699H12.4045H12.3393H12.2742H12.2091H12.1442H12.0794H12.0146H11.95H11.8856H11.8212H11.7569H11.6928H11.6288H11.5649H11.5011H11.4374H11.3739H11.3105H11.2473H11.1842H11.1212H11.0583H10.9956H10.9331H10.8706H10.8084H10.7462H10.6843H10.6224H10.5608H10.4993H10.4379H10.3767H10.3157H10.2548H10.1941H10.1336H10.0732H10.013H9.95298H9.89313H9.83346H9.77396H9.71466H9.65553H9.59658H9.53783H9.47926H9.42088H9.36271H9.30473H9.24693H9.18936H9.13196H9.07476H9.01778H8.96101H8.90446H8.84808H8.79196H8.73601H8.68031H8.62481H8.56953H8.51448H8.45966H8.40506H8.35068H8.29656H8.24263H8.18896H8.13551H8.08231H8.02936H7.97663H7.92416H7.87193H7.81996H7.76821H7.71673H7.66551H7.61453H7.56381H7.51336H7.46316H7.41323H7.36358H7.31418H7.26506H7.21618H7.16761H7.11931H7.07126H7.02351H6.97603H6.92886H6.88196H6.83533H6.78901H6.74296H6.69723H6.65178H6.60663H6.56176H6.51721H6.47296H6.42901H6.38538H6.34203H6.29903H6.25631H6.21391H6.17183H6.13008H6.08863H6.04753H6.00673H5.96626H5.92611H5.88631H5.84683H5.80768H5.76888H5.73041H5.69228H5.65448H5.61703H5.57993H5.54318H5.50678H5.47073H5.43503H5.39968H5.36471H5.33008H5.29581H5.26191H5.22836H5.19521H5.16238H5.12996H5.09791H5.06623H5.03491H5.00398H4.97343H4.94328H4.91351H4.88411H4.85511H4.82648H4.79828H4.77046H4.74301H4.71598H4.68936H4.66313H4.63731H4.61188H4.58688H4.56228H4.53808H4.51431H4.49096H4.46801H4.44548H4.42338H4.40173H4.38048H4.35966H4.33926H4.31931H4.29978H4.28068H4.26203H4.24381H4.22603H4.20871H4.19183H4.17538H4.15941H4.14386H4.12878H4.11416H4.09998H4.08628H4.07303H4.06023H4.04791H4.03606H4.02466H4.01376H4.00331H3.99333H3.98386H3.97483H3.96631H3.95823H3.95068C2.96311 25 2.06811 25.5812 1.66661 26.4835C0.884356 28.2415 0.406806 30.6755 0.174983 32.8955C-0.0571216 35.1183 -0.0819817 37.507 0.245081 39.219C0.774581 41.991 1.82091 44.4153 2.71058 46.1223C3.15916 46.9828 3.57748 47.6792 3.88843 48.167C4.04416 48.4115 4.17368 48.6048 4.26756 48.7413C4.31453 48.8095 4.35263 48.864 4.38073 48.9035L4.41521 48.9517L4.42656 48.9673L4.43071 48.973L4.43241 48.9752C4.43273 48.9757 4.43383 48.9773 6.45068 47.5L4.43241 48.9752C4.90328 49.6182 5.65383 50 6.45068 50V47.5C6.45068 50 6.45033 50 6.45068 50H6.45406H6.45926H6.47511L6.52808 49.9995C6.57266 49.9992 6.63553 49.9985 6.71521 49.9972C6.87448 49.9945 7.10123 49.9893 7.38306 49.9788C7.94566 49.958 8.73338 49.9165 9.64576 49.8335C11.4368 49.6707 13.8466 49.3365 15.9913 48.6217C17.8057 48.017 19.7914 47.211 21.3224 45.6017ZM15.5206 40.401C16.0418 41.1645 16.6265 41.8812 17.267 42.5437C16.6437 43.0235 15.7536 43.4305 14.4101 43.8783C12.8047 44.4135 10.8395 44.7043 9.19308 44.854C8.66743 44.9018 8.18838 44.934 7.78226 44.9557C7.59116 44.6347 7.37318 44.25 7.14443 43.8112C6.73356 43.023 6.29936 42.082 5.92343 41.0407L15.5206 40.401ZM18.4128 35.197L20.2158 35.0768L24.4463 30H24.4116H24.3631H24.3141H24.2648H24.2153H24.1656H24.1156H24.0653H24.0146H23.9638H23.9128H23.8616H23.8098H23.7581H23.7061H23.6536H23.6011H23.5483H23.4953H23.4421H23.3883H23.3346H23.2806H23.2263H23.1721H23.1173H23.0623H23.0073H22.9518H22.8963H22.8406H22.7846H22.7283H22.6718H22.6152H22.5584H22.5013H22.444H22.3866H22.3289H22.271H22.213H22.1547H22.0963H22.0376H21.9788H21.9198H21.8606H21.8012H21.7417H21.6819H21.622H21.5619H21.5017H21.4413H21.3807H21.3199H21.259H21.1979H21.1366H21.0752H21.0136H20.9519H20.89H20.828H20.7658H20.7035H20.641H20.5784H20.5156H20.4527H20.3897H20.3265H20.2632H20.1998H20.1362H20.0725H20.0087H19.9448H19.8807H19.8165H19.7522H19.6878H19.6233H19.5586H19.4939H19.429H19.364H19.299H19.2338H19.1685H19.1031H19.0377H18.9721H18.9064H18.8407H18.7748H18.7089H18.6429H18.5768H18.5106H18.4444H18.3781H18.3117H18.2452H18.1786H18.112H18.0453H17.9786H17.9118H17.8449H17.778H17.7694C17.7242 30.4103 17.701 30.8272 17.701 31.25C17.701 32.6387 17.9526 33.9688 18.4128 35.197ZM12.7484 30C12.717 30.4127 12.701 30.8295 12.701 31.25C12.701 32.7348 12.9001 34.173 13.2731 35.5395L5.00006 36.0913C5.00116 35.2855 5.04811 34.371 5.14796 33.4148C5.27961 32.154 5.48801 30.9685 5.73978 30H5.76888H5.80768H5.84683H5.88631H5.92611H5.96626H6.00673H6.04753H6.08863H6.13008H6.17183H6.21391H6.25631H6.29903H6.34203H6.38538H6.42901H6.47296H6.51721H6.56176H6.60663H6.65178H6.69723H6.74296H6.78901H6.83533H6.88196H6.92886H6.97603H7.02351H7.07126H7.11931H7.16761H7.21618H7.26506H7.31418H7.36358H7.41323H7.46316H7.51336H7.56381H7.61453H7.66551H7.71673H7.76821H7.81996H7.87193H7.92416H7.97663H8.02936H8.08231H8.13551H8.18896H8.24263H8.29656H8.35068H8.40506H8.45966H8.51448H8.56953H8.62481H8.68031H8.73601H8.79196H8.84808H8.90446H8.96101H9.01778H9.07476H9.13196H9.18936H9.24693H9.30473H9.36271H9.42088H9.47926H9.53783H9.59658H9.65553H9.71466H9.77396H9.83346H9.89313H9.95298H10.013H10.0732H10.1336H10.1941H10.2548H10.3157H10.3767H10.4379H10.4993H10.5608H10.6224H10.6843H10.7462H10.8084H10.8706H10.9331H10.9956H11.0583H11.1212H11.1842H11.2473H11.3105H11.3739H11.4374H11.5011H11.5649H11.6288H11.6928H11.7569H11.8212H11.8856H11.95H12.0146H12.0794H12.1442H12.2091H12.2742H12.3393H12.4045H12.4699H12.5353H12.6008H12.6665H12.7322H12.7484Z" fill="#00D40B"/></svg>
-                </div>
-                <h1>Biblioteca</h1>
-                <p>Glossário interativo de termos, técnicas e conceitos com microanimações.</p>
-            </section>
+                    <h2>Parte 3: O Dicionário de Rotas: A "Route Tree" Detalhada</h2>
+                    <p>Correr rotas não é correr para um ponto no campo; é uma performance. O WR está mentindo para o DB em quase todas as rotas. A "venda" (a mentira) é tão importante quanto o "corte" (a verdade).</p>
+                    
+                    <h2>Parte 4: A Ciência da Separação: Dominando o Topo da Rota</h2>
+                    <p>A separação é criada pela eficiência no ponto de quebra (breakpoint).</p>
 
-            <!-- View 4: Criador de Rotas -->
-            <section id="creator-view" class="view placeholder-view">
-                <div class="icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                </div>
-                <h1>Criador de Rotas</h1>
-                <p>Ferramenta para desenhar suas próprias rotas, que serão convertidas em animações fluidas.</p>
-            </section>
-            
-        </main>
+                    <h2>Parte 5: O Jogo de Xadrez: Identificação e Ataque de Coberturas</h2>
+                    <p>Um WR de elite não apenas corre a rota desenhada; ele corre a rota correta para a cobertura apresentada.</p>
+
+                    <h2>Parte 6: Nível de Doutorado: Situações Táticas Avançadas</h2>
+                    <p>Este é o xadrez do futebol americano. Defesas "Match" e "Fire Zone" são respostas aos conceitos da Parte 5. O WR de elite deve aprender as contra-respostas.</p>
+
+                    <h2>Parte 7: O Laboratório: Drills para a Maestria</h2>
+                    <p>A técnica de elite é construída através de repetição focada.</p>
+
+                    <div style="height: 50px;"></div>
+                </article>
+            </div>
+        </div>
         
-        <!-- BARRA DE NAVEGAÇÃO INFERIOR -->
-        <nav id="tab-bar">
-            <button class="tab-item active" data-view="playbook-view">
-                <span class="icon">
-                    <!-- Ícone customizado: Campo/Playbook -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9.5 14.5 12 12l2.5 2.5"/></svg>
-                </span>
-                Playbook
-            </button>
-            <button class="tab-item" data-view="theory-view">
-                <span class="icon">
-                    <!-- Ícone customizado: Livro/Teoria -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                </span>
-                Teoria
-            </button>
-            <button class="tab-item" data-view="library-view">
-                <span class="icon">
-                     <!-- Capacete WR SVG -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 50"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.6262 15.4445C15.8549 16.643 18.775 19.072 20.1404 22.0848C20.5135 22.908 20.4131 23.8685 19.8779 24.597C19.7808 24.7293 19.6865 24.8635 19.5951 25H19.6233H19.6878H19.7522H19.8165H19.8807H19.9448H20.0087H20.0725H20.1362H20.1998H20.2632H20.3265H20.3897H20.4527H20.5156H20.5784H20.641H20.7035H20.7658H20.828H20.89H20.9519H21.0136H21.0752H21.1366H21.1979H21.259H21.3199H21.3807H21.4413H21.5017H21.5619H21.622H21.6819H21.7417H21.8012H21.8606H21.9198H21.9788H22.0376H22.0963H22.1547H22.213H22.271H22.3289H22.3866H22.444H22.5013H22.5584H22.6152H22.6718H22.7283H22.7846H22.8406H22.8963H22.9518H23.0073H23.0623H23.1173H23.1721H23.2263H23.2806H23.3346H23.3883H23.4421H23.4953H23.5483H23.6011H23.6536H23.7061H23.7581H23.8098H23.8616H23.9128H23.9638H24.0146H24.0653H24.1156H24.1656H24.2153H24.2648H24.3141H24.3631H24.4116H24.4601H24.5083H24.5561H24.6036H24.6508H24.6981H24.7446H24.7911H24.8373H24.8831H24.9286H24.9738H25.0188H25.0636H25.1078H25.1521H25.1958H25.2391H25.2823H25.3251H25.3676H25.4098H25.4518H25.4933H25.5346H25.5753H25.6161H25.6563H25.6963H25.7358H25.7751H25.8141H25.8526H25.8696C26.7341 23.5055 28.3501 22.5 30.2008 22.5C32.9621 22.5 35.2008 24.7385 35.2008 27.5C35.2008 30.2615 32.9621 32.5 30.2008 32.5C29.7846 32.5 29.3803 32.4493 28.9938 32.3533L23.9313 38.4282C23.8896 39.404 23.7791 40.3085 23.5936 41.145C25.1866 42.0093 27.0113 42.5 28.9511 42.5C32.4436 42.5 35.5631 40.9115 37.6303 38.408C38.1053 37.833 38.8123 37.5 39.5581 37.5H45.8143C48.5606 34.075 50.2008 29.7317 50.2008 25C50.2008 13.9543 41.2466 5 30.2008 5C22.6191 5 16.0179 9.21972 12.6262 15.4445ZM21.3224 45.6017C23.5971 46.8132 26.1938 47.5 28.9511 47.5C33.5601 47.5 37.7223 45.5785 40.6771 42.5H46.9716C47.6828 42.5 48.3603 42.1973 48.8346 41.6673C52.7916 37.246 55.2008 31.4012 55.2008 25C55.2008 11.1929 44.0081 0 30.2008 0C19.4499 0 10.29 6.78503 6.75761 16.2982C6.48678 17.0276 6.57098 17.8415 6.98538 18.5C7.39981 19.1585 8.09718 19.5866 8.87196 19.6579C11.1981 19.8722 13.5991 21.301 14.921 23.0468C14.5546 23.6723 14.2287 24.3245 13.9471 25H13.9284H13.8614H13.7944H13.7275H13.6607H13.5939H13.5272H13.4605H13.3939H13.3274H13.2609H13.1946H13.1283H13.0621H12.9959H12.9298H12.8639H12.798H12.7322H12.6665H12.6008H12.5353H12.4699H12.4045H12.3393H12.2742H12.2091H12.1442H12.0794H12.0146H11.95H11.8856H11.8212H11.7569H11.6928H11.6288H11.5649H11.5011H11.4374H11.3739H11.3105H11.2473H11.1842H11.1212H11.0583H10.9956H10.9331H10.8706H10.8084H10.7462H10.6843H10.6224H10.5608H10.4993H10.4379H10.3767H10.3157H10.2548H10.1941H10.1336H10.0732H10.013H9.95298H9.89313H9.83346H9.77396H9.71466H9.65553H9.59658H9.53783H9.47926H9.42088H9.36271H9.30473H9.24693H9.18936H9.13196H9.07476H9.01778H8.96101H8.90446H8.84808H8.79196H8.73601H8.68031H8.62481H8.56953H8.51448H8.45966H8.40506H8.35068H8.29656H8.24263H8.18896H8.13551H8.08231H8.02936H7.97663H7.92416H7.87193H7.81996H7.76821H7.71673H7.66551H7.61453H7.56381H7.51336H7.46316H7.41323H7.36358H7.31418H7.26506H7.21618H7.16761H7.11931H7.07126H7.02351H6.97603H6.92886H6.88196H6.83533H6.78901H6.74296H6.69723H6.65178H6.60663H6.56176H6.51721H6.47296H6.42901H6.38538H6.34203H6.29903H6.25631H6.21391H6.17183H6.13008H6.08863H6.04753H6.00673H5.96626H5.92611H5.88631H5.84683H5.80768H5.76888H5.73041H5.69228H5.65448H5.61703H5.57993H5.54318H5.50678H5.47073H5.43503H5.39968H5.36471H5.33008H5.29581H5.26191H5.22836H5.19521H5.16238H5.12996H5.09791H5.06623H5.03491H5.00398H4.97343H4.94328H4.91351H4.88411H4.85511H4.82648H4.79828H4.77046H4.74301H4.71598H4.68936H4.66313H4.63731H4.61188H4.58688H4.56228H4.53808H4.51431H4.49096H4.46801H4.44548H4.42338H4.40173H4.38048H4.35966H4.33926H4.31931H4.29978H4.28068H4.26203H4.24381H4.22603H4.20871H4.19183H4.17538H4.15941H4.14386H4.12878H4.11416H4.09998H4.08628H4.07303H4.06023H4.04791H4.03606H4.02466H4.01376H4.00331H3.99333H3.98386H3.97483H3.96631H3.95823H3.95068C2.96311 25 2.06811 25.5812 1.66661 26.4835C0.884356 28.2415 0.406806 30.6755 0.174983 32.8955C-0.0571216 35.1183 -0.0819817 37.507 0.245081 39.219C0.774581 41.991 1.82091 44.4153 2.71058 46.1223C3.15916 46.9828 3.57748 47.6792 3.88843 48.167C4.04416 48.4115 4.17368 48.6048 4.26756 48.7413C4.31453 48.8095 4.35263 48.864 4.38073 48.9035L4.41521 48.9517L4.42656 48.9673L4.43071 48.973L4.43241 48.9752C4.43273 48.9757 4.43383 48.9773 6.45068 47.5L4.43241 48.9752C4.90328 49.6182 5.65383 50 6.45068 50V47.5C6.45068 50 6.45033 50 6.45068 50H6.45406H6.45926H6.47511L6.52808 49.9995C6.57266 49.9992 6.63553 49.9985 6.71521 49.9972C6.87448 49.9945 7.10123 49.9893 7.38306 49.9788C7.94566 49.958 8.73338 49.9165 9.64576 49.8335C11.4368 49.6707 13.8466 49.3365 15.9913 48.6217C17.8057 48.017 19.7914 47.211 21.3224 45.6017ZM15.5206 40.401C16.0418 41.1645 16.6265 41.8812 17.267 42.5437C16.6437 43.0235 15.7536 43.4305 14.4101 43.8783C12.8047 44.4135 10.8395 44.7043 9.19308 44.854C8.66743 44.9018 8.18838 44.934 7.78226 44.9557C7.59116 44.6347 7.37318 44.25 7.14443 43.8112C6.73356 43.023 6.29936 42.082 5.92343 41.0407L15.5206 40.401ZM18.4128 35.197L20.2158 35.0768L24.4463 30H24.4116H24.3631H24.3141H24.2648H24.2153H24.1656H24.1156H24.0653H24.0146H23.9638H23.9128H23.8616H23.8098H23.7581H23.7061H23.6536H23.6011H23.5483H23.4953H23.4421H23.3883H23.3346H23.2806H23.2263H23.1721H23.1173H23.0623H23.0073H22.9518H22.8963H22.8406H22.7846H22.7283H22.6718H22.6152H22.5584H22.5013H22.444H22.3866H22.3289H22.271H22.213H22.1547H22.0963H22.0376H21.9788H21.9198H21.8606H21.8012H21.7417H21.6819H21.622H21.5619H21.5017H21.4413H21.3807H21.3199H21.259H21.1979H21.1366H21.0752H21.0136H20.9519H20.89H20.828H20.7658H20.7035H20.641H20.5784H20.5156H20.4527H20.3897H20.3265H20.2632H20.1998H20.1362H20.0725H20.0087H19.9448H19.8807H19.8165H19.7522H19.6878H19.6233H19.5586H19.4939H19.429H19.364H19.299H19.2338H19.1685H19.1031H19.0377H18.9721H18.9064H18.8407H18.7748H18.7089H18.6429H18.5768H18.5106H18.4444H18.3781H18.3117H18.2452H18.1786H18.112H18.0453H17.9786H17.9118H17.8449H17.778H17.7694C17.7242 30.4103 17.701 30.8272 17.701 31.25C17.701 32.6387 17.9526 33.9688 18.4128 35.197ZM12.7484 30C12.717 30.4127 12.701 30.8295 12.701 31.25C12.701 32.7348 12.9001 34.173 13.2731 35.5395L5.00006 36.0913C5.00116 35.2855 5.04811 34.371 5.14796 33.4148C5.27961 32.154 5.48801 30.9685 5.73978 30H5.76888H5.80768H5.84683H5.88631H5.92611H5.96626H6.00673H6.04753H6.08863H6.13008H6.17183H6.21391H6.25631H6.29903H6.34203H6.38538H6.42901H6.47296H6.51721H6.56176H6.60663H6.65178H6.69723H6.74296H6.78901H6.83533H6.88196H6.92886H6.97603H7.02351H7.07126H7.11931H7.16761H7.21618H7.26506H7.31418H7.36358H7.41323H7.46316H7.51336H7.56381H7.61453H7.66551H7.71673H7.76821H7.81996H7.87193H7.92416H7.97663H8.02936H8.08231H8.13551H8.18896H8.24263H8.29656H8.35068H8.40506H8.45966H8.51448H8.56953H8.62481H8.68031H8.73601H8.79196H8.84808H8.90446H8.96101H9.01778H9.07476H9.13196H9.18936H9.24693H9.30473H9.36271H9.42088H9.47926H9.53783H9.59658H9.65553H9.71466H9.77396H9.83346H9.89313H9.95298H10.013H10.0732H10.1336H10.1941H10.2548H10.3157H10.3767H10.4379H10.4993H10.5608H10.6224H10.6843H10.7462H10.8084H10.8706H10.9331H10.9956H11.0583H11.1212H11.1842H11.2473H11.3105H11.3739H11.4374H11.5011H11.5649H11.6288H11.6928H11.7569H11.8212H11.8856H11.95H12.0146H12.0794H12.1442H12.2091H12.2742H12.3393H12.4045H12.4699H12.5353H12.6008H12.6665H12.7322H12.7484Z"/></svg>
-                </span>
-                Biblioteca
-            </button>
-            <button class="tab-item" data-view="creator-view">
-                <span class="icon">
-                    <!-- Ícone customizado: Lápis/Criação -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                </span>
-                Criador
-            </button>
-        </nav>
-    </div>
+        <div id="library-page" class="page">
+            <header class="page-header">
+                <h1>Biblioteca</h1>
+            </header>
+            <div class="page-content" style="padding: 20px;">
+                <ul class="list-container">
+                    <li class="list-item">
+                        <div class="icon">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#00D40B"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <div class="text">
+                            <h4>Stance (Posição)</h4>
+                            <p>A fundação para uma saída explosiva.</p>
+                        </div>
+                    </li>
+                    <li class="list-item">
+                        <div class="icon">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="#00D40B"><path d="M20.5 6c-2.61.7-5.67 1-8.5 1s-5.89-.3-8.5-1L3 8c1.86.5 4 .83 6 1v6c0 .55.45 1 1 1h.5c.28 0 .5-.22.5-.5V9.83c1.86.17 3.81.17 5.67 0V16c0 .28.22.5.5.5H17c.55 0 1-.45 1-1V9c2-.17 4.14-.5 6-1l-.5-2z"/></svg>
+                        </div>
+                        <div class="text">
+                            <h4>Release (Saída)</h4>
+                            <p>Técnicas para vencer o press na linha.</p>
+                        </div>
+                    </li>
+                    <li class="list-item">
+                        <div class="icon">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="48" height="47" viewBox="0 0 48 47" fill="none">
+                                <path d="M12.7632 33.8793L34.8577 12.3295M34.0742 21.5428L25.4558 13.7349M19.9714 19.2785L27.8063 27.3987M13.6251 25.3686L22.1651 33.4107M4.77161 42.546C4.77161 42.546 -3.69334 26.5472 12.0581 11.3145C25.2991 -1.49045 42.5359 3.42862 42.5359 3.42862C42.5359 3.42862 51.546 16.8581 38.1483 33.8793C24.9551 50.6406 4.77161 42.546 4.77161 42.546Z" stroke="#CA883D" stroke-width="5"/>
+                            </svg>
+                        </div>
+                        <div class="text">
+                            <h4>Catch Point (Ponto de Recepção)</h4>
+                            <p>Dominando o momento da recepção.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="creator-page" class="page">
+            <div class="page-content">
+                <canvas id="creator-canvas"></canvas>
+            </div>
+            <div class="creator-toolbar">
+                <button id="undo-btn">
+                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 8C9.81 8 7.55 9.47 6.4 11.5L9 11.5V13.5L4 13.5L4 8.5L6 8.5L6 10.64C7.43 8.44 9.79 7 12.5 7C16.48 7 19.62 10.02 19.93 13.89L17.93 13.9C17.64 11.12 15.32 9 12.5 9Z" fill="currentColor"/></svg>
+                </button>
+                 <button id="clear-btn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" fill="currentColor"/></svg>
+                </button>
+                 <button id="export-btn">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9H15V3H9V9H5L12 16L19 9ZM5 18V20H19V18H5Z" fill="currentColor"/></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <nav id="tab-bar">
+        <button class="tab-item active" data-page="playbook-page">
+            <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.33,12.24,14.6,9.15,12,3,9.4,9.15,4.67,12.24l4.73,3.09L12,21l2.6-6.15Z"/>
+            </svg>
+            <span>Playbook</span>
+        </button>
+        <button class="tab-item" data-page="theory-page">
+            <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18,2H6A2,2,0,0,0,4,4V20a2,2,0,0,0,2,2H18a2,2,0,0,0,2-2V4A2,2,0,0,0,18,2ZM9,4h2v5L9.5,7.5,8,9V4H6V20H18V4Z"/>
+            </svg>
+            <span>Manual</span>
+        </button>
+        <button class="tab-item" data-page="library-page">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="56" height="50" viewBox="0 0 56 50" fill="none">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12.6262 15.4445C15.8549 16.643 18.775 19.072 20.1404 22.0848C20.5135 22.908 20.4131 23.8685 19.8779 24.597C19.7808 24.7293 19.6865 24.8635 19.5951 25H25.8696C26.7341 23.5055 28.3501 22.5 30.2008 22.5C32.9621 22.5 35.2008 24.7385 35.2008 27.5C35.2008 30.2615 32.9621 32.5 30.2008 32.5C29.7846 32.5 29.3803 32.4493 28.9938 32.3533L23.9313 38.4282C23.8896 39.404 23.7791 40.3085 23.5936 41.145C25.1866 42.0093 27.0113 42.5 28.9511 42.5C32.4436 42.5 35.5631 40.9115 37.6303 38.408C38.1053 37.833 38.8123 37.5 39.5581 37.5H45.8143C48.5606 34.075 50.2008 29.7317 50.2008 25C50.2008 13.9543 41.2466 5 30.2008 5C22.6191 5 16.0179 9.21972 12.6262 15.4445ZM21.3224 45.6017C23.5971 46.8132 26.1938 47.5 28.9511 47.5C33.5601 47.5 37.7223 45.5785 40.6771 42.5H46.9716C47.6828 42.5 48.3603 42.1973 48.8346 41.6673C52.7916 37.246 55.2008 31.4012 55.2008 25C55.2008 11.1929 44.0081 0 30.2008 0C19.4499 0 10.29 6.78503 6.75761 16.2982C6.48678 17.0276 6.57098 17.8415 6.98538 18.5C7.39981 19.1585 8.09718 19.5866 8.87196 19.6579C11.1981 19.8722 13.5991 21.301 14.921 23.0468C14.5546 23.6723 14.2287 24.3245 13.9471 25H3.95068C2.96311 25 2.06811 25.5812 1.66661 26.4835C0.884356 28.2415 0.406806 30.6755 0.174983 32.8955C-0.0571216 35.1183 -0.0819817 37.507 0.245081 39.219C0.774581 41.991 1.82091 44.4153 2.71058 46.1223C3.15916 46.9828 3.57748 47.6792 3.88843 48.167C4.43273 48.9757 4.43383 48.9773 6.45068 47.5L4.43241 48.9752C4.90328 49.6182 5.65383 50 6.45068 50C9.64576 49.8335 11.4368 49.6707 15.9913 48.6217C17.8057 48.017 19.7914 47.211 21.3224 45.6017ZM15.5206 40.401C16.0418 41.1645 16.6265 41.8812 17.267 42.5437C16.6437 43.0235 15.7536 43.4305 14.4101 43.8783C12.8047 44.4135 10.8395 44.7043 9.19308 44.854C8.66743 44.9018 8.18838 44.934 7.78226 44.9557C7.59116 44.6347 7.37318 44.25 7.14443 43.8112C6.73356 43.023 6.29936 42.082 5.92343 41.0407L15.5206 40.401ZM18.4128 35.197L20.2158 35.0768L24.4463 30H17.7694C17.7242 30.4103 17.701 30.8272 17.701 31.25C17.701 32.6387 17.9526 33.9688 18.4128 35.197ZM12.7484 30C12.717 30.4127 12.701 30.8295 12.701 31.25C12.701 32.7348 12.9001 34.173 13.2731 35.5395L5.00006 36.0913C5.00116 35.2855 5.04811 34.371 5.14796 33.4148C5.27961 32.154 5.48801 30.9685 5.73978 30H12.7484Z"/>
+            </svg>
+            <span>Biblioteca</span>
+        </button>
+        <button class="tab-item" data-page="creator-page">
+            <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3,17.25V21H6.75L17.81,9.94,14.06,6.19ZM20.71,7.04a1,1,0,0,0,0-1.41L18.37,3.29a1,1,0,0,0-1.41,0L15.13,5.12l3.75,3.75,1.83-1.83Z"/>
+            </svg>
+            <span>Criador</span>
+        </button>
+    </nav>
 
     <script>
-    // === 4. LÓGICA E INTERATIVIDADE (JAVASCRIPT) ===
-    (() => {
-        'use strict';
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabItems = document.querySelectorAll('.tab-item');
+            const pages = document.querySelectorAll('.page');
 
-        // O conteúdo completo do manual
-        const manualContent = `
-            Parte 1: A Fundação da Grandeza: Posição (Stance) e Saída (Start)
-            O sucesso de um Wide Receiver (WR) em qualquer rota começa antes do snap. A fundação de toda a execução é a posição (stance) e a saída (start). Uma base falha leva a movimentos desperdiçados, o que destrói o timing da jogada e alerta o defensor (DB).
-            1.1 A Posição Perfeita (The Perfect Stance)
-            O objetivo da posição é criar uma plataforma para explosão em qualquer direção (vertical, interna, externa) sem "telegrafar" a intenção.
-            Mecânica (WR Externo - 3 Pontos Modificado):
-            Pés: O pé interno (inside foot) deve estar à frente. O peso deve ser carregado no arco (arch) do pé da frente (cerca de 60-70%). O pé de trás serve de equilíbrio, posicionado na ponta dos pés, pronto para impulsionar.
-            Nível (Pad Level): A mentalidade é "olhos sobre os dedos" (eyes over toes). O peito deve estar inclinado sobre o joelho da frente, e os joelhos devem estar dobrados. A posição deve se assemelhar a um power clean (arranque de potência), carregada e pronta para explodir, não para descansar.[1]
-            Mãos: As mãos devem estar relaxadas, mas prontas. "Mãos violentas" (violent hands) contra o press começam com uma posição relaxada que permite a reação mais rápida.[2]
-            Mecânica (Slot Receiver - 2 Pontos):
-            Posição: O WR do slot geralmente usa uma posição de 2 pontos (em pé). Isso permite uma melhor visão pré-snap dos Linebackers (LBs) e Safeties, facilitando a leitura de blitzes ou rotações de cobertura.
-            Variação de Peso: O peso pode ser 50/50 para rotas de opção e quebras rápidas, ou ligeiramente inclinado para a frente para releases verticais.
-            1.2 A Saída Explosiva (The Explosive Start)
-            O inimigo número um de um WR novato é o "Falso Passo" (False Step).[2] Qualquer movimento que não ganhe terreno (um passo para trás para "se arrumar", um passo lateral desnecessário) é um movimento desperdiçado.
-            Técnica: A saída deve ser uma impulsão simultânea de ambos os pés. O primeiro passo deve ganhar terreno, seja verticalmente contra off-coverage [3], ou lateralmente em um release calculado contra press.
-            Causa e Efeito: A saída dita o timing da jogada. Em um conceito de quick game (jogo rápido), o Quarterback (QB) está jogando a bola em um local e tempo específicos. Se um Slant de 3 passos leva 4 passos para ser executado por causa de uma saída lenta, a bola será interceptada ou cairá no chão.
-            Parte 2: Vencendo na Linha de Scrimmage: O Manual de Releases
-            Vencer o press coverage é uma mentalidade. O DB está tentando ditar os termos da jogada; o release é o WR tomando esse controle de volta. O objetivo não é desviar do DB; é derrotá-lo.[2]
-            2.1 Lendo o Leverage (Vantagem) do Defensor
-            Antes do snap, o WR deve diagnosticar o leverage (a vantagem de posição) do DB. Isso informa qual ferramenta (release) usar.
-            Inside Shade (Sombra Interna): O DB está alinhado por dentro do WR. Ele está protegendo o Slant e o Post. Ele está dando ao WR a rota Fade (vertical externa).
-            Outside Shade (Sombra Externa): O DB está alinhado por fora do WR. Ele está protegendo o Fade e o Out. Ele está dando ao WR o Slant.
-            Head-up (De Frente): O DB está neutro, tentando forçar o WR a declarar sua intenção primeiro.
-            2.2 Biblioteca de Releases Físicos (Contra Press-Man)
-            O objetivo contra press-man é recriar a linha de scrimmage e "empilhar" (stack) o DB—colocando-se diretamente na frente dele.
-            Técnicas de Mão (Hand Techniques):
-            A primeira fase do release envolve "pés violentos" e "mãos violentas" para derrotar o jam (o soco) do DB.[2]
-            Double Hand SWAT [2]: A técnica fundamental. Quando o DB atira as duas mãos (o punch), o WR usa um "swat" (um tapa) violento e simultâneo para limpar as duas mãos. Imediatamente após o contato, o WR deve acelerar.
-            Clip and Rip [2]: Usado quando o DB tenta um jam com uma mão. O WR usa sua mão interna para "grampear" (clip) o pulso ou cotovelo do DB contra seu próprio corpo, e então "rasga" (rip) seu braço externo por baixo (como um uppercut) para passar. Ao fazer isso, o WR deve "ficar o mais fino possível" (get as skinny as possible) para reduzir a área de superfície.[3]
-            Clip, Drop, Pull [2]: Uma variação onde o WR agarra o braço do DB e o puxa para passar, usando o ímpeto do defensor contra ele mesmo.
-            Técnicas de Corpo (Downfield):
-            Arm Bar (Barra de Braço) [2]: Quando o DB está correndo no quadril (hip) do WR, o WR pode usar um "arm bar" firme para criar espaço no ponto de recepção (catch point). No entanto, isso deve ser usado com moderação; limitado a dois "arm bars" por rota. Se o WR está lutando o campo todo, ele já perdeu.[2]
-            O "Stack" (Empilhamento) [2]: Este é o objetivo final de todo release vertical. Após vencer o DB na linha (1-3 jardas), o objetivo é "empilhar"—correr diretamente na frente do DB, colocando-o na "trilha de poeira" do WR. Uma vez empilhado, o WR controla a rota; o DB está em modo reativo e não sabe se a rota quebrará para dentro, para fora, ou continuará funda.[2]
-            2.3 Biblioteca de Releases de Finesse (Contra Off-Man / Soft Press)
-            Contra cobertura off (recuada) ou soft press, o objetivo é a decepção: fazer o DB "morder" uma rota falsa ou "virar os quadris" (flip his hips) na direção errada.
-            Dive Release [30]: Este release vende agressivamente uma rota cruzada (como Drag ou Slant) para fazer o DB morder para dentro, permitindo que o WR acelere verticalmente por fora.
-            Chaves para Vender [30]: 1. Correr forte (full speed). 2. Correr em passos largos (full stride)—ninguém corre um drag com passos curtos. 3. Comprometer o pad level e a linguagem corporal para vender a rota interna.
-            Blade Release [4]: Usado para evitar totalmente o contato. O WR usa uma leve mudança de velocidade na linha e, no momento do punch do DB, "tira o ombro" (take your shoulder away), reduzindo a área de superfície.[2] O DB erra o alvo, e o WR está livre.
-            Split Release: Um release de 1-2 passos (interno-externo ou externo-interno) para forçar o DB a "abrir os pés".[5] O objetivo é fazer o DB "abrir o portão" (open the gate) para um lado, criando um caminho limpo para o WR atacar o leverage oposto.
-            Tabela 1: Matriz de Seleção de Release
-            Se o DB está...|E sua Rota é...|Sua Ferramenta (Release) é...
-            Press, Inside Shade|Fade / Go Route|Split Release (para fora), seguido de SWAT/Rip para empilhar.
-            Press, Outside Shade|Fade / Go Route|Split Release (para dentro), seguido de SWAT/Rip para empilhar.
-            Press, Outside Shade|Slant|Diamond Release (3 passos para o ombro externo) ou Dive Release (ataca a face).
-            Press, Inside Shade|Post|Ataca o leverage (para dentro) para fazê-lo morder, depois Rip por cima para empilhar.
-            Off-Man (Recuado)|Go / Fade|Ataque o "cushion" (almofada/espaço) dele, depois use o Blade Release [4] no topo.
-            Off-Man (Recuado)|Comeback|Ataque o "cushion" verticalmente para fazê-lo virar os quadris, então quebre.
-            Parte 8: Conclusão
-            A transformação de um "novato" em um "Wide Receiver de elite" é uma jornada de duas partes. A primeira parte é a maestria física: aperfeiçoar a posição, a saída, o release e a mecânica de cada rota até que sejam executados sem pensamento consciente.
-            A segunda, e mais crítica, parte é a maestria tática. É a transição de um atleta para um estrategista em campo. Um WR de elite entende que ele não está apenas correndo um Slant. Ele está executando um Slant que se torna um Sight Adjustment contra uma Fire Zone, ou que deve ser achatado (flattened) contra um LB em Cover 2. Ele entende como sua rota se encaixa no quebra-cabeça maior e como usar as regras de defesas complexas, como a Cover 3 Match, contra elas.[25]
-            A verdadeira grandeza é alcançada quando a preparação física encontra a inteligência tática, permitindo que o WR jogue em velocidade máxima, com confiança total, sabendo que ele tem a ferramenta certa para cada problema que a defesa apresentar.
-        `;
-
-        // Cache de elementos do DOM
-        const tabItems = document.querySelectorAll('.tab-item');
-        const views = document.querySelectorAll('.view');
-        const theoryContainer = document.getElementById('theory-view');
-
-        /**
-         * Inicializa o aplicativo: configura os listeners e renderiza o conteúdo inicial.
-         */
-        function init() {
-            setupEventListeners();
-            parseAndRenderTheory();
-            registerServiceWorker();
-        }
-
-        /**
-         * Configura os listeners de clique para a barra de navegação.
-         */
-        function setupEventListeners() {
-            tabItems.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const targetViewId = tab.dataset.view;
-                    switchView(targetViewId);
+            function switchTab(targetPageId) {
+                pages.forEach(page => {
+                    page.classList.remove('active');
+                    if (page.id === targetPageId) {
+                        page.classList.add('active');
+                    }
                 });
-            });
-        }
 
-        /**
-         * Alterna a visualização ativa com base no ID fornecido.
-         * @param {string} targetViewId - O ID da view a ser ativada.
-         */
-        function switchView(targetViewId) {
-            // Atualiza o estado das views
-            views.forEach(view => {
-                view.classList.toggle('active', view.id === targetViewId);
-            });
-
-            // Atualiza o estado dos botões da tab bar
-            tabItems.forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.view === targetViewId);
-            });
-
-            // Garante que a nova view comece do topo ao ser exibida
-            const activeView = document.getElementById(targetViewId);
-            if(activeView) activeView.scrollTop = 0;
-        }
-
-        /**
-         * Analisa o texto do manual e o renderiza como HTML na view de teoria.
-         */
-        function parseAndRenderTheory() {
-            const lines = manualContent.trim().split('\n');
-            let html = '';
-            let inTable = false;
-            
-            lines.forEach(line => {
-                line = line.trim();
-                if (!line) return;
-
-                // Transforma as referências [X] em spans estilizados
-                line = line.replace(/\[(\d+)\]/g, '<span class="reference">$1</span>');
-                
-                if (line.startsWith('Parte ')) {
-                    if (inTable) { html += '</tbody></table>'; inTable = false; }
-                    html += `<h1>${line.replace('Parte ', 'Parte ')}</h1>`;
-                } else if (line.match(/^\d+\.\d+\s/)) {
-                    if (inTable) { html += '</tbody></table>'; inTable = false; }
-                    html += `<h2>${line}</h2>`;
-                } else if (line.startsWith('Tabela ')) {
-                    if (inTable) { html += '</tbody></table>'; }
-                    html += `<h3>${line}</h3>`;
-                } else if (line.includes('|')) {
-                    const cells = line.split('|');
-                    if (!inTable) {
-                        html += '<table><thead><tr>';
-                        cells.forEach(cell => html += `<th>${cell.trim()}</th>`);
-                        html += '</tr></thead><tbody>';
-                        inTable = true;
-                    } else {
-                        html += '<tr>';
-                        cells.forEach(cell => html += `<td>${cell.trim()}</td>`);
-                        html += '</tr>';
+                tabItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.page === targetPageId) {
+                        item.classList.add('active');
                     }
-                } else {
-                     if (inTable && !line.includes('|')) {
-                        html += '</tbody></table>';
-                        inTable = false;
-                    }
-                    // Mantém a formatação de termos importantes em negrito
-                    line = line.replace(/\b([A-Z][a-zA-Z\s-]+[a-zA-Z])\b/g, (match, p1) => {
-                        // Lista de palavras a não colocar em negrito (ex: nomes próprios, início de frase)
-                        const exceptions = ["O", "A", "Se", "Contra", "Quando"];
-                        if(exceptions.includes(p1.split(' ')[0])) return p1;
-                        return `<strong>${p1}</strong>`;
-                    });
-                     html += `<p>${line}</p>`;
-                }
-            });
-
-            if (inTable) {
-                html += '</tbody></table>';
-            }
-
-            theoryContainer.innerHTML = html;
-        }
-
-        /**
-         * Registra o Service Worker para funcionalidades PWA.
-         */
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/service-worker.js')
-                        .then(registration => {
-                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                        })
-                        .catch(error => {
-                            console.log('ServiceWorker registration failed: ', error);
-                        });
                 });
             }
-        }
 
-        // Inicia o aplicativo quando o DOM estiver pronto.
-        document.addEventListener('DOMContentLoaded', init);
+            tabItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const targetPageId = item.dataset.page;
+                    switchTab(targetPageId);
+                });
+            });
 
-    })();
+            switchTab('playbook-page');
+        });
     </script>
 </body>
 </html>
