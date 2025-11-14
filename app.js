@@ -1,272 +1,308 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Check for PixiJS
+    if (typeof PIXI === 'undefined') {
+        console.error('Pixi.js library is not loaded. Please include it in your HTML.');
+        return;
+    }
 
-    const FIELD_WIDTH_YARDS = 53.3 * 2; // Sideline to sideline
-    const FIELD_HEIGHT_YARDS = 60; // Displayed portion of the field
-
-    // --- UTILITY FUNCTIONS ---
-    const lerp = (start, end, t) => start * (1 - t) + end * t;
-    const quadraticBezier = (p0, p1, p2, t) => {
-        const oneMinusT = 1 - t;
-        return {
-            x: oneMinusT * oneMinusT * p0.x + 2 * oneMinusT * t * p1.x + t * t * p2.x,
-            y: oneMinusT * oneMinusT * p0.y + 2 * oneMinusT * t * p1.y + t * t * p2.y
-        };
+    // --- App Constants ---
+    const FIELD_ASPECT_RATIO = 120 / 53.33; // 120 yards (including endzones) / 53.33 yards width
+    const COLORS = {
+        FIELD_GREEN: 0x0A5B2B,
+        LINE_WHITE: 0xFFFFFF,
+        ACCENT: 0x00D40B,
     };
 
-    // --- CORE COMPONENTS ---
+    // --- Global State ---
+    let activePageId = 'playbook-page';
 
-    class PlayerEntity {
-        constructor(id, role) {
-            this.id = id;
-            this.role = role;
-            this.position = { x: 0, y: 0 }; // World coordinates (yards)
+    // --- DOM Elements ---
+    const tabItems = document.querySelectorAll('.tab-item');
+    const pages = document.querySelectorAll('.page');
+    const playbookCanvas = document.getElementById('field-canvas');
+    const creatorCanvas = document.getElementById('creator-canvas');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const undoBtn = document.getElementById('undo-btn');
 
-            this.element = document.createElement('div');
-            this.element.id = id;
-            this.element.className = `player-entity player-${role.toLowerCase()}`;
+    // --- PixiJS Applications ---
+    let playbookApp, creatorApp;
+    let isPlaybookInitialized = false;
+    let isCreatorInitialized = false;
 
-            if (id === 'BALL') {
-                this.element.innerHTML = `<svg><use xlink:href="#football-icon"/></svg>`;
-            } else {
-                this.element.innerHTML = `<svg><use xlink:href="#helmet-icon"/></svg>`;
-            }
-        }
+    // --- Helper Function: Draw Football Field ---
+    const drawField = (app) => {
+        const container = new PIXI.Container();
+        app.stage.addChild(container);
 
-        render(container) {
-            container.appendChild(this.element);
-        }
+        const graphics = new PIXI.Graphics();
+        container.addChild(graphics);
 
-        setPosition(worldPos, worldToScreen) {
-            this.position = worldPos;
-            const screenPos = worldToScreen(worldPos);
-            // Using transform for performance. Centering the icon.
-            this.element.style.transform = `translate(${screenPos.x - this.element.offsetWidth / 2}px, ${screenPos.y - this.element.offsetHeight / 2}px)`;
-        }
-    }
-
-    class RouteAnimator {
-        constructor(entities, worldToScreen) {
-            this.entities = entities;
-            this.worldToScreen = worldToScreen;
-            this.animationFrameId = null;
-            this.activeAnimations = [];
-        }
-
-        stop() {
-            if (this.animationFrameId) {
-                cancelAnimationFrame(this.animationFrameId);
-                this.animationFrameId = null;
-            }
-            this.activeAnimations = [];
-        }
-
-        play(route) {
-            this.stop();
-
-            const allAnimations = [];
-
-            // Add snap animation
-            if (route.snapAnimation) {
-                const snap = route.snapAnimation;
-                const entity = this.entities[snap.entityId];
-                allAnimations.push(this.createAnimation(entity, {
-                    type: snap.type,
-                    start: route.initialPositions[snap.entityId],
-                    end: snap.end,
-                    duration: snap.duration,
-                    delay: snap.delay || 0
-                }));
-            }
-
-            // Add player path animations
-            route.path.forEach(segment => {
-                const entity = this.entities[segment.entityId];
-                const startPos = allAnimations.length > 0 && allAnimations[allAnimations.length - 1].entityId === segment.entityId
-                    ? allAnimations[allAnimations.length - 1].end
-                    : route.initialPositions[segment.entityId];
-
-                allAnimations.push(this.createAnimation(entity, { ...segment, start: startPos }));
-            });
-
-            this.activeAnimations = allAnimations.map(anim => ({ ...anim, startTime: null }));
-
-            const animate = (timestamp) => {
-                let allAnimationsFinished = true;
-
-                this.activeAnimations.forEach(anim => {
-                    if (anim.isFinished) return;
-                    if (!anim.startTime) anim.startTime = timestamp;
-
-                    const elapsedTime = timestamp - anim.startTime;
-
-                    if (elapsedTime < anim.delay) {
-                        allAnimationsFinished = false;
-                        return;
-                    }
-                    
-                    const adjustedElapsedTime = elapsedTime - anim.delay;
-                    const progress = Math.min(adjustedElapsedTime / anim.duration, 1);
-
-                    let currentPos;
-                    if (anim.type === 'line') {
-                        currentPos = {
-                            x: lerp(anim.start.x, anim.end.x, progress),
-                            y: lerp(anim.start.y, anim.end.y, progress)
-                        };
-                    } else if (anim.type === 'curve') {
-                        currentPos = quadraticBezier(anim.start, anim.controlPoint, anim.end, progress);
-                    }
-
-                    anim.entity.setPosition(currentPos, this.worldToScreen);
-
-                    if (progress < 1) {
-                        allAnimationsFinished = false;
-                    } else {
-                        anim.isFinished = true;
-                    }
-                });
-
-                if (!allAnimationsFinished) {
-                    this.animationFrameId = requestAnimationFrame(animate);
-                } else {
-                    console.log(`Route "${route.name}" finished.`);
-                }
-            };
-            this.animationFrameId = requestAnimationFrame(animate);
-        }
-
-        createAnimation(entity, segment) {
-            return {
-                entity,
-                entityId: entity.id,
-                start: segment.start,
-                end: segment.end,
-                controlPoint: segment.controlPoint,
-                type: segment.type,
-                duration: segment.duration,
-                delay: segment.delay || 0,
-                isFinished: false
-            };
-        }
-    }
-
-    class UIController {
-        constructor(routes, onRouteSelect) {
-            this.routes = routes;
-            this.onRouteSelect = onRouteSelect;
-            this.selectorElement = document.getElementById('route-selector');
-            this.infoDisplayElement = document.getElementById('route-info-display');
-            this.init();
-        }
-
-        init() {
-            this.selectorElement.innerHTML = '';
-            this.routes.forEach(route => {
-                const li = document.createElement('li');
-                li.textContent = route.name;
-                li.dataset.routeId = route.id;
-                li.addEventListener('click', () => this.handleSelection(route.id));
-                this.selectorElement.appendChild(li);
-            });
-        }
-
-        handleSelection(routeId) {
-            const route = this.routes.find(r => r.id === routeId);
-            if (!route) return;
-
-            // Update UI
-            this.infoDisplayElement.textContent = route.name;
-            Array.from(this.selectorElement.children).forEach(li => {
-                li.classList.toggle('active', li.dataset.routeId === routeId);
-            });
-
-            // Trigger callback
-            this.onRouteSelect(route);
-        }
-    }
-
-    // --- MAIN APPLICATION LOGIC ---
-
-    class App {
-        constructor() {
-            this.fieldCanvas = document.getElementById('field-canvas');
-            this.scrimmageLine = document.querySelector('.line-of-scrimmage');
-            this.routes = [];
-            this.entities = {};
-            this.animator = null;
-            this.uiController = null;
-
-            this.setupCoordinateSystem();
-            window.addEventListener('resize', () => this.setupCoordinateSystem());
-        }
-
-        async start() {
-            await this.loadRoutes();
-            this.createEntities();
-            this.animator = new RouteAnimator(this.entities, this.worldToScreen.bind(this));
-            this.uiController = new UIController(this.routes, this.playRoute.bind(this));
+        const resizeField = () => {
+            const screenW = app.screen.width;
+            const screenH = app.screen.height;
+            const screenAspect = screenW / screenH;
             
-            // Set initial state to the first route
-            this.resetToRoute(this.routes[0]);
-        }
+            let fieldW, fieldH;
 
-        setupCoordinateSystem() {
-            this.canvasRect = this.fieldCanvas.getBoundingClientRect();
-            // The coordinate system assumes the 50-yard line is vertical center.
-            // Our field SVG shows from the line of scrimmage (y=0) up.
-            // Let's assume the visible field is from y=0 to y=60.
-            this.yScale = this.canvasRect.height / FIELD_HEIGHT_YARDS;
-            this.xScale = this.canvasRect.width / FIELD_WIDTH_YARDS;
-
-            // Position scrimmage line (y=0)
-            const scrimmageScreenPos = this.worldToScreen({x: 0, y: 0});
-            this.scrimmageLine.style.transform = `translateY(${scrimmageScreenPos.y}px)`;
-        }
-
-        worldToScreen(worldPos) {
-            // Converts yards {x, y} to pixels {x, y}
-            // x=0 is center, y=0 is line of scrimmage
-            const screenX = this.canvasRect.width / 2 + worldPos.x * this.xScale;
-            // Y is inverted for screen coordinates (0 is top)
-            // We set y=0 (scrimmage) to be a certain percentage from the bottom. Let's say 85%.
-            const screenY = this.canvasRect.height * 0.85 - worldPos.y * this.yScale;
-            return { x: screenX, y: screenY };
-        }
-
-        async loadRoutes() {
-            try {
-                const response = await fetch('routes.json');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                this.routes = await response.json();
-            } catch (error) {
-                console.error("Fatal: Could not load routes.json. Application cannot start.", error);
+            if (screenAspect > FIELD_ASPECT_RATIO) {
+                fieldH = screenH * 0.9;
+                fieldW = fieldH * FIELD_ASPECT_RATIO;
+            } else {
+                fieldW = screenW * 0.9;
+                fieldH = fieldW / FIELD_ASPECT_RATIO;
             }
-        }
+            
+            container.width = fieldW;
+            container.height = fieldH;
+            container.x = (screenW - fieldW) / 2;
+            container.y = (screenH - fieldH) / 2;
+        };
 
-        createEntities() {
-            // Create all possible entities. A more robust system might do this dynamically.
-            this.entities['WR1'] = new PlayerEntity('WR1', 'WR');
-            this.entities['QB1'] = new PlayerEntity('QB1', 'QB');
-            this.entities['BALL'] = new PlayerEntity('BALL', 'BALL');
-            Object.values(this.entities).forEach(e => e.render(this.fieldCanvas));
-        }
+        const draw = () => {
+            graphics.clear();
+            const width = 1200; 
+            const height = 533; 
 
-        resetToRoute(route) {
-            this.animator.stop();
-            for (const [id, pos] of Object.entries(route.initialPositions)) {
-                if (this.entities[id]) {
-                    this.entities[id].setPosition(pos, this.worldToScreen.bind(this));
-                }
+            // Field Background
+            graphics.beginFill(COLORS.FIELD_GREEN);
+            graphics.drawRect(0, 0, width, height);
+            graphics.endFill();
+
+            // White Lines
+            graphics.lineStyle(2, COLORS.LINE_WHITE, 1);
+            
+            // Sidelines & Endlines
+            graphics.drawRect(0, 0, width, height);
+
+            // Goal Lines & Endzones
+            graphics.moveTo(100, 0);
+            graphics.lineTo(100, height);
+            graphics.moveTo(1100, 0);
+            graphics.lineTo(1100, height);
+
+            // Yard Lines
+            for (let i = 1; i <= 19; i++) {
+                const x = 100 + i * 50;
+                graphics.moveTo(x, 0);
+                graphics.lineTo(x, height);
             }
-        }
+            
+            // Hash Marks
+            for (let i = 1; i <= 99; i++) {
+                const x = 100 + i * 10;
+                graphics.moveTo(x, 1);
+                graphics.lineTo(x, 5);
+                graphics.moveTo(x, height - 1);
+                graphics.lineTo(x, height - 5);
+            }
+        };
+        
+        app.renderer.on('resize', resizeField);
+        resizeField();
+        draw();
+    };
 
-        playRoute(route) {
-            this.resetToRoute(route);
-            this.animator.play(route);
+    // --- Playbook Logic ---
+    let playerDot, routePath, animationProgress = 0, isPlaying = false;
+    const routePoints = [ {x:600, y:266}, {x:600, y:166}, {x:700, y:66} ]; // Simple Post Route
+
+    const initPlaybook = () => {
+        if (isPlaybookInitialized) return;
+        
+        playbookApp = new PIXI.Application({
+            view: playbookCanvas,
+            resizeTo: playbookCanvas.parentElement,
+            backgroundColor: 0x000000,
+            antialias: true,
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true,
+        });
+
+        drawField(playbookApp);
+
+        // Draw Route
+        routePath = new PIXI.Graphics();
+        routePath.lineStyle(4, COLORS.ACCENT, 0.8);
+        routePath.moveTo(routePoints[0].x, routePoints[0].y);
+        for(let i = 1; i < routePoints.length; i++){
+            routePath.lineTo(routePoints[i].x, routePoints[i].y);
         }
+        playbookApp.stage.getChildAt(0).addChild(routePath); // Add to field container
+        
+        // Player Dot
+        playerDot = new PIXI.Graphics();
+        playerDot.beginFill(COLORS.ACCENT);
+        playerDot.drawCircle(0, 0, 8);
+        playerDot.endFill();
+        playerDot.x = routePoints[0].x;
+        playerDot.y = routePoints[0].y;
+        playbookApp.stage.getChildAt(0).addChild(playerDot);
+
+        playbookApp.ticker.add((delta) => {
+            if (!isPlaying || !playerDot) return;
+            animationProgress += 0.005 * delta;
+            if (animationProgress > 1) animationProgress = 0;
+            
+            const totalLength = routePoints.length - 1;
+            const currentSegment = Math.floor(animationProgress * totalLength);
+            const segmentProgress = (animationProgress * totalLength) - currentSegment;
+
+            const p1 = routePoints[currentSegment];
+            const p2 = routePoints[currentSegment + 1] || routePoints[currentSegment];
+
+            playerDot.x = p1.x + (p2.x - p1.x) * segmentProgress;
+            playerDot.y = p1.y + (p2.y - p1.y) * segmentProgress;
+        });
+
+        isPlaybookInitialized = true;
+    };
+    
+    playPauseBtn.addEventListener('click', () => {
+        isPlaying = !isPlaying;
+        playPauseBtn.innerHTML = isPlaying ? 
+            `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 19H10V5H6V19ZM14 5V19H18V5H14Z" fill="currentColor"/></svg>` :
+            `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5V19L19 12L8 5Z" fill="currentColor"/></svg>`;
+    });
+
+    resetBtn.addEventListener('click', () => {
+        animationProgress = 0;
+        playerDot.x = routePoints[0].x;
+        playerDot.y = routePoints[0].y;
+        if (isPlaying) {
+             isPlaying = false;
+             playPauseBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 5V19L19 12L8 5Z" fill="currentColor"/></svg>`;
+        }
+    });
+
+    // --- Creator Logic ---
+    let isDrawing = false;
+    let currentPathPoints = [];
+    let drawnPaths = [];
+    let drawingLayer;
+
+    const initCreator = () => {
+        if (isCreatorInitialized) return;
+
+        creatorApp = new PIXI.Application({
+            view: creatorCanvas,
+            resizeTo: creatorCanvas.parentElement,
+            backgroundColor: 0x000000,
+            antialias: true,
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true,
+        });
+
+        drawField(creatorApp);
+        
+        drawingLayer = new PIXI.Graphics();
+        creatorApp.stage.getChildAt(0).addChild(drawingLayer);
+
+        const stage = creatorApp.stage.getChildAt(0);
+        stage.interactive = true;
+
+        const getLocalPoint = (globalPoint) => {
+            return stage.toLocal(globalPoint);
+        };
+
+        stage.on('pointerdown', (event) => {
+            isDrawing = true;
+            const pos = getLocalPoint(event.data.global);
+            currentPathPoints = [{x: pos.x, y: pos.y}];
+        });
+
+        stage.on('pointermove', (event) => {
+            if (!isDrawing) return;
+            const pos = getLocalPoint(event.data.global);
+            currentPathPoints.push({x: pos.x, y: pos.y});
+            
+            drawingLayer.clear();
+            drawnPaths.forEach(path => redrawPath(path));
+            redrawPath(currentPathPoints, true);
+        });
+
+        stage.on('pointerup', () => {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (currentPathPoints.length > 1) {
+                drawnPaths.push(currentPathPoints);
+            }
+            currentPathPoints = [];
+        });
+
+        stage.on('pointerupoutside', () => {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (currentPathPoints.length > 1) {
+                drawnPaths.push(currentPathPoints);
+            }
+            currentPathPoints = [];
+        });
+
+        isCreatorInitialized = true;
+    };
+
+    const redrawPath = (points, isTemporary = false) => {
+        if (points.length < 2) return;
+        drawingLayer.lineStyle(5, COLORS.ACCENT, isTemporary ? 0.5 : 1);
+        drawingLayer.moveTo(points[0].x, points[0].y);
+        for(let i = 1; i < points.length; i++) {
+            drawingLayer.lineTo(points[i].x, points[i].y);
+        }
+    };
+    
+    const redrawAllPaths = () => {
+        drawingLayer.clear();
+        drawnPaths.forEach(path => redrawPath(path));
+    };
+    
+    clearBtn.addEventListener('click', () => {
+        drawnPaths = [];
+        redrawAllPaths();
+    });
+
+    undoBtn.addEventListener('click', () => {
+        drawnPaths.pop();
+        redrawAllPaths();
+    });
+
+    // --- Tab Switching Logic ---
+    const switchTab = (targetPageId) => {
+        if (activePageId === targetPageId) return;
+
+        pages.forEach(page => page.classList.remove('active'));
+        document.getElementById(targetPageId).classList.add('active');
+
+        tabItems.forEach(item => item.classList.remove('active'));
+        document.querySelector(`.tab-item[data-page="${targetPageId}"]`).classList.add('active');
+
+        activePageId = targetPageId;
+
+        // Lazy initialize canvases
+        if (activePageId === 'playbook-page') initPlaybook();
+        if (activePageId === 'creator-page') initCreator();
+    };
+
+    tabItems.forEach(item => {
+        item.addEventListener('click', () => {
+            switchTab(item.dataset.page);
+        });
+    });
+
+    // --- PWA Service Worker ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
     }
 
-    // --- INITIALIZE ---
-    const app = new App();
-    app.start();
+    // --- Initial Load ---
+    initPlaybook(); // Initialize the first page
 });
