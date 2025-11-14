@@ -1,641 +1,514 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>RouteMaster PWA v1.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- PWA Manifest (must be a separate file for production) -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#0a3c0a"/>
+    <!-- PWA / Apple Native Feel Meta Tags -->
+    <title>Route Genesis</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="RouteMaster">
-    <link rel="apple-touch-icon" href="icon-192x192.png"> <!-- Note: Icon file would need to be created -->
+    <meta name="apple-mobile-web-app-title" content="Route Genesis">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png"> <!-- Você precisará criar este ícone usando o capacete -->
+    <link rel="manifest" href="manifest.json"> <!-- E este arquivo manifest -->
 
     <style>
-        /* 1.0 CSS RESET & CORE STYLES */
+        /* === 1. FUNDAÇÃO E PRINCÍPIOS DE DESIGN (CSS) === */
+        
+        /* -- Paleta de Cores e Variáveis -- */
         :root {
-            --field-green: #0a3c0a;
-            --line-white: rgba(255, 255, 255, 0.8);
-            --ui-background: rgba(0, 0, 0, 0.7);
-            --text-color: #ffffff;
-            --wr-color: #FFD700; /* Gold/Yellow as per spec */
-            --qb-color: #00D40B; /* Green as per spec */
-            --accent-color: #4a90e2;
+            --bg-primary: #000000;
+            --bg-secondary: #1C1C1E;
+            --accent-primary: #00D40B;
+            --text-primary: #FFFFFF;
+            --text-secondary: rgba(235, 235, 245, 0.6);
+            --border-color: rgba(84, 84, 88, 0.65);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --tab-bar-height: 84px; /* Altura padrão com safe area */
+            --safe-area-bottom: env(safe-area-inset-bottom);
         }
 
+        /* -- Reset e Base -- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         html, body {
-            width: 100%;
             height: 100%;
+            width: 100%;
             overflow: hidden;
-            background-color: #000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-family);
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* 2.0 APP CONTAINER & FIELD */
+        /* === 2. ESTRUTURA DO APLICATIVO === */
+
         #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background: var(--bg-primary);
+        }
+
+        #main-content {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* -- Sistema de Navegação de Views -- */
+        .view {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
+            padding: 20px 20px calc(var(--tab-bar-height) + 10px) 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), visibility 0.3s;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* Rolagem fluida no iOS */
+        }
+        
+        .view.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* -- Tab Bar (Navegação Principal) -- */
+        #tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--tab-bar-height);
+            padding-bottom: var(--safe-area-bottom);
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 10px;
+            background-color: rgba(28, 28, 30, 0.85); /* Cor translúcida */
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-top: 0.5px solid var(--border-color);
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 10px;
+            font-weight: 500;
+            transition: color 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        
+        .tab-item .icon {
+            width: 28px;
+            height: 28px;
+        }
+
+        .tab-item .icon svg {
+            width: 100%;
+            height: 100%;
+            fill: var(--text-secondary);
+            transition: fill 0.2s ease-in-out;
+        }
+
+        .tab-item.active {
+            color: var(--accent-primary);
+        }
+
+        .tab-item.active .icon svg {
+            fill: var(--accent-primary);
+        }
+
+
+        /* === 3. ESTILIZAÇÃO DAS VIEWS ESPECÍFICAS === */
+
+        /* -- View: Teoria -- */
+        #theory-view h1 {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: 0.37px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        #theory-view h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 32px;
+            margin-bottom: 16px;
+        }
+
+        #theory-view h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        #theory-view p, #theory-view li {
+            font-size: 17px;
+            line-height: 1.5;
+            letter-spacing: -0.41px;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+        
+        #theory-view strong {
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        #theory-view ul {
+            list-style-position: inside;
+            padding-left: 10px;
+        }
+
+        .reference {
+            display: inline-block;
+            background-color: var(--bg-secondary);
+            color: var(--accent-primary);
+            font-size: 12px;
+            font-weight: 700;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            border-radius: 50%;
+            margin-left: 2px;
+            vertical-align: super;
+            cursor: pointer;
+        }
+        
+        #theory-view table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #theory-view th, #theory-view td {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 15px;
+            border-bottom: 0.5px solid var(--border-color);
+        }
+
+        #theory-view th {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        #theory-view tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* -- Placeholder para outras views -- */
+        .placeholder-view {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-        }
-
-        #field-wrapper {
-            position: relative;
-            width: 100%;
-            /* iPhone 9:19.5 aspect ratio */
-            aspect-ratio: 9 / 19.5;
-            max-height: 100%;
-            background-color: var(--field-green);
-            overflow: hidden;
-        }
-
-        #field-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* 3.0 ENTITIES (Player, Ball) */
-        .entity {
-            position: absolute;
-            /* Set top/left to 0, all positioning is done via transform for performance */
-            top: 0;
-            left: 0;
-            will-change: transform;
-            /* A small size for the clickable area */
-            width: 30px;
-            height: 30px;
-        }
-
-        .entity svg {
-            width: 100%;
-            height: 100%;
-            /* Center the icon within the div */
-            position: absolute;
-            top: -50%;
-            left: -50%;
-        }
-        
-        #BALL {
-             width: 20px;
-             height: 20px;
-             opacity: 0;
-             will-change: transform, opacity;
-        }
-
-        /* 4.0 UI CONTROLLER */
-        #ui-controller {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: var(--ui-background);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 15px;
-            padding-bottom: calc(15px + env(safe-area-inset-bottom)); /* iPhone notch support */
-        }
-
-        #info-display {
-            color: var(--text-color);
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
             text-align: center;
+            gap: 20px;
         }
-
-        #route-selector {
-            display: flex;
-            overflow-x: auto;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE 10+ */
+        .placeholder-view h1 {
+            font-size: 28px;
+            font-weight: 600;
         }
-
-        #route-selector::-webkit-scrollbar { /* WebKit */
-            display: none;
+        .placeholder-view p {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 300px;
         }
-
-        .route-button {
-            flex-shrink: 0;
-            padding: 10px 18px;
-            margin-right: 10px;
-            border-radius: 20px;
-            border: 1px solid var(--accent-color);
-            background-color: transparent;
-            color: var(--accent-color);
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s, color 0.2s;
+        .placeholder-view .icon {
+            width: 80px;
+            height: 80px;
         }
-
-        .route-button.active {
-            background-color: var(--accent-color);
-            color: var(--text-color);
+        .placeholder-view .icon svg {
+            fill: var(--accent-primary);
         }
     </style>
 </head>
 <body>
-    <!-- Main Application Container -->
+    
     <div id="app-container">
-        <div id="field-wrapper">
-            <!-- 2.1 FieldCanvas Component (as inline SVG) -->
-            <svg id="field-svg" preserveAspectRatio="none" viewBox="0 0 106.6 120">
-                <!-- Sidelines -->
-                <line x1="0" y1="0" x2="0" y2="120" stroke="var(--line-white)" stroke-width="0.5"/>
-                <line x1="106.6" y1="0" x2="106.6" y2="120" stroke="var(--line-white)" stroke-width="0.5"/>
+        <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
+        <main id="main-content">
 
-                <!-- Hash Marks (simplified for clarity) -->
-                <defs>
-                    <g id="hash-marks">
-                        <line x1="35.5" y1="0" x2="35.5" y2="2" stroke="var(--line-white)" stroke-width="0.5"/>
-                        <line x1="71.1" y1="0" x2="71.1" y2="2" stroke="var(--line-white)" stroke-width="0.5"/>
-                    </g>
-                </defs>
-                <script>
-                    const fieldSvg = document.getElementById('field-svg');
-                    // Generate yard lines and numbers
-                    for (let y = 0; y <= 60; y += 1) { // Up to 50 yards + endzone
-                        const yPos = 20 + y; // Y-offset to start scrimmage at y=0
-                        if (y % 5 === 0) {
-                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                            line.setAttribute('x1', 0);
-                            line.setAttribute('y1', yPos);
-                            line.setAttribute('x2', 106.6);
-                            line.setAttribute('y2', yPos);
-                            line.setAttribute('stroke', 'var(--line-white)');
-                            line.setAttribute('stroke-width', y % 10 === 0 ? '0.7' : '0.4');
-                            fieldSvg.appendChild(line);
-                        }
-                        // Add hash marks every yard
-                        const hash = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-                        hash.setAttribute('href', '#hash-marks');
-                        hash.setAttribute('transform', `translate(0, ${yPos})`);
-                        fieldSvg.appendChild(hash);
+            <!-- View 1: Playbook (Campo de Treino) -->
+            <section id="playbook-view" class="view active placeholder-view">
+                <div class="icon">
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <h1>Playbook Interativo</h1>
+                <p>O campo de treino visual será renderizado aqui com WebGL/Canvas para máxima performance.</p>
+            </section>
 
-                        // Add yard numbers
-                        if (y > 0 && y <= 50 && y % 10 === 0) {
-                            for (let i = 0; i < 2; i++) {
-                                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                                text.setAttribute('fill', 'var(--line-white)');
-                                text.setAttribute('font-size', '6');
-                                text.setAttribute('font-weight', 'bold');
-                                text.setAttribute('text-anchor', 'middle');
-                                text.textContent = y;
-                                
-                                const xPos = i === 0 ? 10 : 96.6;
-                                const rotation = i === 0 ? 90 : -90;
-                                text.setAttribute('transform', `translate(${xPos}, ${yPos + 2.5}) rotate(${rotation})`);
-                                fieldSvg.appendChild(text);
-                            }
-                        }
-                    }
-                </script>
-            </svg>
-            <!-- Player entities will be injected here by JS -->
-        </div>
+            <!-- View 2: Teoria (Conteúdo) -->
+            <section id="theory-view" class="view">
+                <!-- Conteúdo será injetado pelo JavaScript -->
+            </section>
 
-        <!-- 2.4 UIController -->
-        <div id="ui-controller">
-            <div id="info-display">Select a Route</div>
-            <div id="route-selector">
-                <!-- Buttons will be injected here by JS -->
-            </div>
-        </div>
-    </div>
+            <!-- View 3: Biblioteca (Glossário) -->
+            <section id="library-view" class="view placeholder-view">
+                <div class="icon">
+                    <!-- Capacete WR SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="56" height="50" viewBox="0 0 56 50" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.6262 15.4445C15.8549 16.643 18.775 19.072 20.1404 22.0848C20.5135 22.908 20.4131 23.8685 19.8779 24.597C19.7808 24.7293 19.6865 24.8635 19.5951 25H19.6233H19.6878H19.7522H19.8165H19.8807H19.9448H20.0087H20.0725H20.1362H20.1998H20.2632H20.3265H20.3897H20.4527H20.5156H20.5784H20.641H20.7035H20.7658H20.828H20.89H20.9519H21.0136H21.0752H21.1366H21.1979H21.259H21.3199H21.3807H21.4413H21.5017H21.5619H21.622H21.6819H21.7417H21.8012H21.8606H21.9198H21.9788H22.0376H22.0963H22.1547H22.213H22.271H22.3289H22.3866H22.444H22.5013H22.5584H22.6152H22.6718H22.7283H22.7846H22.8406H22.8963H22.9518H23.0073H23.0623H23.1173H23.1721H23.2263H23.2806H23.3346H23.3883H23.4421H23.4953H23.5483H23.6011H23.6536H23.7061H23.7581H23.8098H23.8616H23.9128H23.9638H24.0146H24.0653H24.1156H24.1656H24.2153H24.2648H24.3141H24.3631H24.4116H24.4601H24.5083H24.5561H24.6036H24.6508H24.6981H24.7446H24.7911H24.8373H24.8831H24.9286H24.9738H25.0188H25.0636H25.1078H25.1521H25.1958H25.2391H25.2823H25.3251H25.3676H25.4098H25.4518H25.4933H25.5346H25.5753H25.6161H25.6563H25.6963H25.7358H25.7751H25.8141H25.8526H25.8696C26.7341 23.5055 28.3501 22.5 30.2008 22.5C32.9621 22.5 35.2008 24.7385 35.2008 27.5C35.2008 30.2615 32.9621 32.5 30.2008 32.5C29.7846 32.5 29.3803 32.4493 28.9938 32.3533L23.9313 38.4282C23.8896 39.404 23.7791 40.3085 23.5936 41.145C25.1866 42.0093 27.0113 42.5 28.9511 42.5C32.4436 42.5 35.5631 40.9115 37.6303 38.408C38.1053 37.833 38.8123 37.5 39.5581 37.5H45.8143C48.5606 34.075 50.2008 29.7317 50.2008 25C50.2008 13.9543 41.2466 5 30.2008 5C22.6191 5 16.0179 9.21972 12.6262 15.4445ZM21.3224 45.6017C23.5971 46.8132 26.1938 47.5 28.9511 47.5C33.5601 47.5 37.7223 45.5785 40.6771 42.5H46.9716C47.6828 42.5 48.3603 42.1973 48.8346 41.6673C52.7916 37.246 55.2008 31.4012 55.2008 25C55.2008 11.1929 44.0081 0 30.2008 0C19.4499 0 10.29 6.78503 6.75761 16.2982C6.48678 17.0276 6.57098 17.8415 6.98538 18.5C7.39981 19.1585 8.09718 19.5866 8.87196 19.6579C11.1981 19.8722 13.5991 21.301 14.921 23.0468C14.5546 23.6723 14.2287 24.3245 13.9471 25H13.9284H13.8614H13.7944H13.7275H13.6607H13.5939H13.5272H13.4605H13.3939H13.3274H13.2609H13.1946H13.1283H13.0621H12.9959H12.9298H12.8639H12.798H12.7322H12.6665H12.6008H12.5353H12.4699H12.4045H12.3393H12.2742H12.2091H12.1442H12.0794H12.0146H11.95H11.8856H11.8212H11.7569H11.6928H11.6288H11.5649H11.5011H11.4374H11.3739H11.3105H11.2473H11.1842H11.1212H11.0583H10.9956H10.9331H10.8706H10.8084H10.7462H10.6843H10.6224H10.5608H10.4993H10.4379H10.3767H10.3157H10.2548H10.1941H10.1336H10.0732H10.013H9.95298H9.89313H9.83346H9.77396H9.71466H9.65553H9.59658H9.53783H9.47926H9.42088H9.36271H9.30473H9.24693H9.18936H9.13196H9.07476H9.01778H8.96101H8.90446H8.84808H8.79196H8.73601H8.68031H8.62481H8.56953H8.51448H8.45966H8.40506H8.35068H8.29656H8.24263H8.18896H8.13551H8.08231H8.02936H7.97663H7.92416H7.87193H7.81996H7.76821H7.71673H7.66551H7.61453H7.56381H7.51336H7.46316H7.41323H7.36358H7.31418H7.26506H7.21618H7.16761H7.11931H7.07126H7.02351H6.97603H6.92886H6.88196H6.83533H6.78901H6.74296H6.69723H6.65178H6.60663H6.56176H6.51721H6.47296H6.42901H6.38538H6.34203H6.29903H6.25631H6.21391H6.17183H6.13008H6.08863H6.04753H6.00673H5.96626H5.92611H5.88631H5.84683H5.80768H5.76888H5.73041H5.69228H5.65448H5.61703H5.57993H5.54318H5.50678H5.47073H5.43503H5.39968H5.36471H5.33008H5.29581H5.26191H5.22836H5.19521H5.16238H5.12996H5.09791H5.06623H5.03491H5.00398H4.97343H4.94328H4.91351H4.88411H4.85511H4.82648H4.79828H4.77046H4.74301H4.71598H4.68936H4.66313H4.63731H4.61188H4.58688H4.56228H4.53808H4.51431H4.49096H4.46801H4.44548H4.42338H4.40173H4.38048H4.35966H4.33926H4.31931H4.29978H4.28068H4.26203H4.24381H4.22603H4.20871H4.19183H4.17538H4.15941H4.14386H4.12878H4.11416H4.09998H4.08628H4.07303H4.06023H4.04791H4.03606H4.02466H4.01376H4.00331H3.99333H3.98386H3.97483H3.96631H3.95823H3.95068C2.96311 25 2.06811 25.5812 1.66661 26.4835C0.884356 28.2415 0.406806 30.6755 0.174983 32.8955C-0.0571216 35.1183 -0.0819817 37.507 0.245081 39.219C0.774581 41.991 1.82091 44.4153 2.71058 46.1223C3.15916 46.9828 3.57748 47.6792 3.88843 48.167C4.04416 48.4115 4.17368 48.6048 4.26756 48.7413C4.31453 48.8095 4.35263 48.864 4.38073 48.9035L4.41521 48.9517L4.42656 48.9673L4.43071 48.973L4.43241 48.9752C4.43273 48.9757 4.43383 48.9773 6.45068 47.5L4.43241 48.9752C4.90328 49.6182 5.65383 50 6.45068 50V47.5C6.45068 50 6.45033 50 6.45068 50H6.45406H6.45926H6.47511L6.52808 49.9995C6.57266 49.9992 6.63553 49.9985 6.71521 49.9972C6.87448 49.9945 7.10123 49.9893 7.38306 49.9788C7.94566 49.958 8.73338 49.9165 9.64576 49.8335C11.4368 49.6707 13.8466 49.3365 15.9913 48.6217C17.8057 48.017 19.7914 47.211 21.3224 45.6017ZM15.5206 40.401C16.0418 41.1645 16.6265 41.8812 17.267 42.5437C16.6437 43.0235 15.7536 43.4305 14.4101 43.8783C12.8047 44.4135 10.8395 44.7043 9.19308 44.854C8.66743 44.9018 8.18838 44.934 7.78226 44.9557C7.59116 44.6347 7.37318 44.25 7.14443 43.8112C6.73356 43.023 6.29936 42.082 5.92343 41.0407L15.5206 40.401ZM18.4128 35.197L20.2158 35.0768L24.4463 30H24.4116H24.3631H24.3141H24.2648H24.2153H24.1656H24.1156H24.0653H24.0146H23.9638H23.9128H23.8616H23.8098H23.7581H23.7061H23.6536H23.6011H23.5483H23.4953H23.4421H23.3883H23.3346H23.2806H23.2263H23.1721H23.1173H23.0623H23.0073H22.9518H22.8963H22.8406H22.7846H22.7283H22.6718H22.6152H22.5584H22.5013H22.444H22.3866H22.3289H22.271H22.213H22.1547H22.0963H22.0376H21.9788H21.9198H21.8606H21.8012H21.7417H21.6819H21.622H21.5619H21.5017H21.4413H21.3807H21.3199H21.259H21.1979H21.1366H21.0752H21.0136H20.9519H20.89H20.828H20.7658H20.7035H20.641H20.5784H20.5156H20.4527H20.3897H20.3265H20.2632H20.1998H20.1362H20.0725H20.0087H19.9448H19.8807H19.8165H19.7522H19.6878H19.6233H19.5586H19.4939H19.429H19.364H19.299H19.2338H19.1685H19.1031H19.0377H18.9721H18.9064H18.8407H18.7748H18.7089H18.6429H18.5768H18.5106H18.4444H18.3781H18.3117H18.2452H18.1786H18.112H18.0453H17.9786H17.9118H17.8449H17.778H17.7694C17.7242 30.4103 17.701 30.8272 17.701 31.25C17.701 32.6387 17.9526 33.9688 18.4128 35.197ZM12.7484 30C12.717 30.4127 12.701 30.8295 12.701 31.25C12.701 32.7348 12.9001 34.173 13.2731 35.5395L5.00006 36.0913C5.00116 35.2855 5.04811 34.371 5.14796 33.4148C5.27961 32.154 5.48801 30.9685 5.73978 30H5.76888H5.80768H5.84683H5.88631H5.92611H5.96626H6.00673H6.04753H6.08863H6.13008H6.17183H6.21391H6.25631H6.29903H6.34203H6.38538H6.42901H6.47296H6.51721H6.56176H6.60663H6.65178H6.69723H6.74296H6.78901H6.83533H6.88196H6.92886H6.97603H7.02351H7.07126H7.11931H7.16761H7.21618H7.26506H7.31418H7.36358H7.41323H7.46316H7.51336H7.56381H7.61453H7.66551H7.71673H7.76821H7.81996H7.87193H7.92416H7.97663H8.02936H8.08231H8.13551H8.18896H8.24263H8.29656H8.35068H8.40506H8.45966H8.51448H8.56953H8.62481H8.68031H8.73601H8.79196H8.84808H8.90446H8.96101H9.01778H9.07476H9.13196H9.18936H9.24693H9.30473H9.36271H9.42088H9.47926H9.53783H9.59658H9.65553H9.71466H9.77396H9.83346H9.89313H9.95298H10.013H10.0732H10.1336H10.1941H10.2548H10.3157H10.3767H10.4379H10.4993H10.5608H10.6224H10.6843H10.7462H10.8084H10.8706H10.9331H10.9956H11.0583H11.1212H11.1842H11.2473H11.3105H11.3739H11.4374H11.5011H11.5649H11.6288H11.6928H11.7569H11.8212H11.8856H11.95H12.0146H12.0794H12.1442H12.2091H12.2742H12.3393H12.4045H12.4699H12.5353H12.6008H12.6665H12.7322H12.7484Z" fill="#00D40B"/></svg>
+                </div>
+                <h1>Biblioteca</h1>
+                <p>Glossário interativo de termos, técnicas e conceitos com microanimações.</p>
+            </section>
 
-    <!-- Hidden SVG Definitions for cloning -->
-    <div style="display: none;">
-        <svg id="svg-helmet" xmlns="http://www.w3.org/2000/svg" width="56" height="50" viewBox="0 0 56 50" fill="none">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.6262 15.4445C15.8549 16.643 18.775 19.072 20.1404 22.0848C20.5135 22.908 20.4131 23.8685 19.8779 24.597C19.7808 24.7293 19.6865 24.8635 19.5951 25H19.6233H19.6878H19.7522H19.8165H19.8807H19.9448H20.0087H20.0725H20.1362H20.1998H20.2632H20.3265H20.3897H20.4527H20.5156H20.5784H20.641H20.7035H20.7658H20.828H20.89H20.9519H21.0136H21.0752H21.1366H21.1979H21.259H21.3199H21.3807H21.4413H21.5017H21.5619H21.622H21.6819H21.7417H21.8012H21.8606H21.9198H21.9788H22.0376H22.0963H22.1547H22.213H22.271H22.3289H22.3866H22.444H22.5013H22.5584H22.6152H22.6718H22.7283H22.7846H22.8406H22.8963H22.9518H23.0073H23.0623H23.1173H23.1721H23.2263H23.2806H23.3346H23.3883H23.4421H23.4953H23.5483H23.6011H23.6536H23.7061H23.7581H23.8098H23.8616H23.9128H23.9638H24.0146H24.0653H24.1156H24.1656H24.2153H24.2648H24.3141H24.3631H24.4116H24.4601H24.5083H24.5561H24.6036H24.6508H24.6981H24.7446H24.7911H24.8373H24.8831H24.9286H24.9738H25.0188H25.0636H25.1078H25.1521H25.1958H25.2391H25.2823H25.3251H25.3676H25.4098H25.4518H25.4933H25.5346H25.5753H25.6161H25.6563H25.6963H25.7358H25.7751H25.8141H25.8526H25.8696C26.7341 23.5055 28.3501 22.5 30.2008 22.5C32.9621 22.5 35.2008 24.7385 35.2008 27.5C35.2008 30.2615 32.9621 32.5 30.2008 32.5C29.7846 32.5 29.3803 32.4493 28.9938 32.3533L23.9313 38.4282C23.8896 39.404 23.7791 40.3085 23.5936 41.145C25.1866 42.0093 27.0113 42.5 28.9511 42.5C32.4436 42.5 35.5631 40.9115 37.6303 38.408C38.1053 37.833 38.8123 37.5 39.5581 37.5H45.8143C48.5606 34.075 50.2008 29.7317 50.2008 25C50.2008 13.9543 41.2466 5 30.2008 5C22.6191 5 16.0179 9.21972 12.6262 15.4445ZM21.3224 45.6017C23.5971 46.8132 26.1938 47.5 28.9511 47.5C33.5601 47.5 37.7223 45.5785 40.6771 42.5H46.9716C47.6828 42.5 48.3603 42.1973 48.8346 41.6673C52.7916 37.246 55.2008 31.4012 55.2008 25C55.2008 11.1929 44.0081 0 30.2008 0C19.4499 0 10.29 6.78503 6.75761 16.2982C6.48678 17.0276 6.57098 17.8415 6.98538 18.5C7.39981 19.1585 8.09718 19.5866 8.87196 19.6579C11.1981 19.8722 13.5991 21.301 14.921 23.0468C14.5546 23.6723 14.2287 24.3245 13.9471 25H13.9284H13.8614H13.7944H13.7275H13.6607H13.5939H13.5272H13.4605H13.3939H13.3274H13.2609H13.1946H13.1283H13.0621H12.9959H12.9298H12.8639H12.798H12.7322H12.6665H12.6008H12.5353H12.4699H12.4045H12.3393H12.2742H12.2091H12.1442H12.0794H12.0146H11.95H11.8856H11.8212H11.7569H11.6928H11.6288H11.5649H11.5011H11.4374H11.3739H11.3105H11.2473H11.1842H11.1212H11.0583H10.9956H10.9331H10.8706H10.8084H10.7462H10.6843H10.6224H10.5608H10.4993H10.4379H10.3767H10.3157H10.2548H10.1941H10.1336H10.0732H10.013H9.95298H9.89313H9.83346H9.77396H9.71466H9.65553H9.59658H9.53783H9.47926H9.42088H9.36271H9.30473H9.24693H9.18936H9.13196H9.07476H9.01778H8.96101H8.90446H8.84808H8.79196H8.73601H8.68031H8.62481H8.56953H8.51448H8.45966H8.40506H8.35068H8.29656H8.24263H8.18896H8.13551H8.08231H8.02936H7.97663H7.92416H7.87193H7.81996H7.76821H7.71673H7.66551H7.61453H7.56381H7.51336H7.46316H7.41323H7.36358H7.31418H7.26506H7.21618H7.16761H7.11931H7.07126H7.02351H6.97603H6.92886H6.88196H6.83533H6.78901H6.74296H6.69723H6.65178H6.60663H6.56176H6.51721H6.47296H6.42901H6.38538H6.34203H6.29903H6.25631H6.21391H6.17183H6.13008H6.08863H6.04753H6.00673H5.96626H5.92611H5.88631H5.84683H5.80768H5.76888H5.73041H5.69228H5.65448H5.61703H5.57993H5.54318H5.50678H5.47073H5.43503H5.39968H5.36471H5.33008H5.29581H5.26191H5.22836H5.19521H5.16238H5.12996H5.09791H5.06623H5.03491H5.00398H4.97343H4.94328H4.91351H4.88411H4.85511H4.82648H4.79828H4.77046H4.74301H4.71598H4.68936H4.66313H4.63731H4.61188H4.58688H4.56228H4.53808H4.51431H4.49096H4.46801H4.44548H4.42338H4.40173H4.38048H4.35966H4.33926H4.31931H4.29978H4.28068H4.26203H4.24381H4.22603H4.20871H4.19183H4.17538H4.15941H4.14386H4.12878H4.11416H4.09998H4.08628H4.07303H4.06023H4.04791H4.03606H4.02466H4.01376H4.00331H3.99333H3.98386H3.97483H3.96631H3.95823H3.95068C2.96311 25 2.06811 25.5812 1.66661 26.4835C0.884356 28.2415 0.406806 30.6755 0.174983 32.8955C-0.0571216 35.1183 -0.0819817 37.507 0.245081 39.219C0.774581 41.991 1.82091 44.4153 2.71058 46.1223C3.15916 46.9828 3.57748 47.6792 3.88843 48.167C4.04416 48.4115 4.17368 48.6048 4.26756 48.7413C4.31453 48.8095 4.35263 48.864 4.38073 48.9035L4.41521 48.9517L4.42656 48.9673L4.43071 48.973L4.43241 48.9752C4.43273 48.9757 4.43383 48.9773 6.45068 47.5L4.43241 48.9752C4.90328 49.6182 5.65383 50 6.45068 50V47.5C6.45068 50 6.45033 50 6.45068 50H6.45406H6.45926H6.47511L6.52808 49.9995C6.57266 49.9992 6.63553 49.9985 6.71521 49.9972C6.87448 49.9945 7.10123 49.9893 7.38306 49.9788C7.94566 49.958 8.73338 49.9165 9.64576 49.8335C11.4368 49.6707 13.8466 49.3365 15.9913 48.6217C17.8057 48.017 19.7914 47.211 21.3224 45.6017ZM15.5206 40.401C16.0418 41.1645 16.6265 41.8812 17.267 42.5437C16.6437 43.0235 15.7536 43.4305 14.4101 43.8783C12.8047 44.4135 10.8395 44.7043 9.19308 44.854C8.66743 44.9018 8.18838 44.934 7.78226 44.9557C7.59116 44.6347 7.37318 44.25 7.14443 43.8112C6.73356 43.023 6.29936 42.082 5.92343 41.0407L15.5206 40.401ZM18.4128 35.197L20.2158 35.0768L24.4463 30H24.4116H24.3631H24.3141H24.2648H24.2153H24.1656H24.1156H24.0653H24.0146H23.9638H23.9128H23.8616H23.8098H23.7581H23.7061H23.6536H23.6011H23.5483H23.4953H23.4421H23.3883H23.3346H23.2806H23.2263H23.1721H23.1173H23.0623H23.0073H22.9518H22.8963H22.8406H22.7846H22.7283H22.6718H22.6152H22.5584H22.5013H22.444H22.3866H22.3289H22.271H22.213H22.1547H22.0963H22.0376H21.9788H21.9198H21.8606H21.8012H21.7417H21.6819H21.622H21.5619H21.5017H21.4413H21.3807H21.3199H21.259H21.1979H21.1366H21.0752H21.0136H20.9519H20.89H20.828H20.7658H20.7035H20.641H20.5784H20.5156H20.4527H20.3897H20.3265H20.2632H20.1998H20.1362H20.0725H20.0087H19.9448H19.8807H19.8165H19.7522H19.6878H19.6233H19.5586H19.4939H19.429H19.364H19.299H19.2338H19.1685H19.1031H19.0377H18.9721H18.9064H18.8407H18.7748H18.7089H18.6429H18.5768H18.5106H18.4444H18.3781H18.3117H18.2452H18.1786H18.112H18.0453H17.9786H17.9118H17.8449H17.778H17.7694C17.7242 30.4103 17.701 30.8272 17.701 31.25C17.701 32.6387 17.9526 33.9688 18.4128 35.197ZM12.7484 30C12.717 30.4127 12.701 30.8295 12.701 31.25C12.701 32.7348 12.9001 34.173 13.2731 35.5395L5.00006 36.0913C5.00116 35.2855 5.04811 34.371 5.14796 33.4148C5.27961 32.154 5.48801 30.9685 5.73978 30H5.76888H5.80768H5.84683H5.88631H5.92611H5.96626H6.00673H6.04753H6.08863H6.13008H6.17183H6.21391H6.25631H6.29903H6.34203H6.38538H6.42901H6.47296H6.51721H6.56176H6.60663H6.65178H6.69723H6.74296H6.78901H6.83533H6.88196H6.92886H6.97603H7.02351H7.07126H7.11931H7.16761H7.21618H7.26506H7.31418H7.36358H7.41323H7.46316H7.51336H7.56381H7.61453H7.66551H7.71673H7.76821H7.81996H7.87193H7.92416H7.97663H8.02936H8.08231H8.13551H8.18896H8.24263H8.29656H8.35068H8.40506H8.45966H8.51448H8.56953H8.62481H8.68031H8.73601H8.79196H8.84808H8.90446H8.96101H9.01778H9.07476H9.13196H9.18936H9.24693H9.30473H9.36271H9.42088H9.47926H9.53783H9.59658H9.65553H9.71466H9.77396H9.83346H9.89313H9.95298H10.013H10.0732H10.1336H10.1941H10.2548H10.3157H10.3767H10.4379H10.4993H10.5608H10.6224H10.6843H10.7462H10.8084H10.8706H10.9331H10.9956H11.0583H11.1212H11.1842H11.2473H11.3105H11.3739H11.4374H11.5011H11.5649H11.6288H11.6928H11.7569H11.8212H11.8856H11.95H12.0146H12.0794H12.1442H12.2091H12.2742H12.3393H12.4045H12.4699H12.5353H12.6008H12.6665H12.7322H12.7484Z" />
-        </svg>
-        <svg id="svg-ball" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50">
-             <path d="M12.7632 33.8793L34.8577 12.3295M34.0742 21.5428L25.4558 13.7349M19.9714 19.2785L27.8063 27.3987M13.6251 25.3686L22.1651 33.4107M4.77161 42.546C4.77161 42.546 -3.69334 26.5472 12.0581 11.3145C25.2991 -1.49045 42.5359 3.42862 42.5359 3.42862C42.5359 3.42862 51.546 16.8581 38.1483 33.8793C24.9551 50.6406 4.77161 42.546 4.77161 42.546Z" stroke="#CA883D" stroke-width="5" fill="#A0522D"/>
-        </svg>
+            <!-- View 4: Criador de Rotas -->
+            <section id="creator-view" class="view placeholder-view">
+                <div class="icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </div>
+                <h1>Criador de Rotas</h1>
+                <p>Ferramenta para desenhar suas próprias rotas, que serão convertidas em animações fluidas.</p>
+            </section>
+            
+        </main>
+        
+        <!-- BARRA DE NAVEGAÇÃO INFERIOR -->
+        <nav id="tab-bar">
+            <button class="tab-item active" data-view="playbook-view">
+                <span class="icon">
+                    <!-- Ícone customizado: Campo/Playbook -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9.5 14.5 12 12l2.5 2.5"/></svg>
+                </span>
+                Playbook
+            </button>
+            <button class="tab-item" data-view="theory-view">
+                <span class="icon">
+                    <!-- Ícone customizado: Livro/Teoria -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </span>
+                Teoria
+            </button>
+            <button class="tab-item" data-view="library-view">
+                <span class="icon">
+                     <!-- Capacete WR SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 50"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.6262 15.4445C15.8549 16.643 18.775 19.072 20.1404 22.0848C20.5135 22.908 20.4131 23.8685 19.8779 24.597C19.7808 24.7293 19.6865 24.8635 19.5951 25H19.6233H19.6878H19.7522H19.8165H19.8807H19.9448H20.0087H20.0725H20.1362H20.1998H20.2632H20.3265H20.3897H20.4527H20.5156H20.5784H20.641H20.7035H20.7658H20.828H20.89H20.9519H21.0136H21.0752H21.1366H21.1979H21.259H21.3199H21.3807H21.4413H21.5017H21.5619H21.622H21.6819H21.7417H21.8012H21.8606H21.9198H21.9788H22.0376H22.0963H22.1547H22.213H22.271H22.3289H22.3866H22.444H22.5013H22.5584H22.6152H22.6718H22.7283H22.7846H22.8406H22.8963H22.9518H23.0073H23.0623H23.1173H23.1721H23.2263H23.2806H23.3346H23.3883H23.4421H23.4953H23.5483H23.6011H23.6536H23.7061H23.7581H23.8098H23.8616H23.9128H23.9638H24.0146H24.0653H24.1156H24.1656H24.2153H24.2648H24.3141H24.3631H24.4116H24.4601H24.5083H24.5561H24.6036H24.6508H24.6981H24.7446H24.7911H24.8373H24.8831H24.9286H24.9738H25.0188H25.0636H25.1078H25.1521H25.1958H25.2391H25.2823H25.3251H25.3676H25.4098H25.4518H25.4933H25.5346H25.5753H25.6161H25.6563H25.6963H25.7358H25.7751H25.8141H25.8526H25.8696C26.7341 23.5055 28.3501 22.5 30.2008 22.5C32.9621 22.5 35.2008 24.7385 35.2008 27.5C35.2008 30.2615 32.9621 32.5 30.2008 32.5C29.7846 32.5 29.3803 32.4493 28.9938 32.3533L23.9313 38.4282C23.8896 39.404 23.7791 40.3085 23.5936 41.145C25.1866 42.0093 27.0113 42.5 28.9511 42.5C32.4436 42.5 35.5631 40.9115 37.6303 38.408C38.1053 37.833 38.8123 37.5 39.5581 37.5H45.8143C48.5606 34.075 50.2008 29.7317 50.2008 25C50.2008 13.9543 41.2466 5 30.2008 5C22.6191 5 16.0179 9.21972 12.6262 15.4445ZM21.3224 45.6017C23.5971 46.8132 26.1938 47.5 28.9511 47.5C33.5601 47.5 37.7223 45.5785 40.6771 42.5H46.9716C47.6828 42.5 48.3603 42.1973 48.8346 41.6673C52.7916 37.246 55.2008 31.4012 55.2008 25C55.2008 11.1929 44.0081 0 30.2008 0C19.4499 0 10.29 6.78503 6.75761 16.2982C6.48678 17.0276 6.57098 17.8415 6.98538 18.5C7.39981 19.1585 8.09718 19.5866 8.87196 19.6579C11.1981 19.8722 13.5991 21.301 14.921 23.0468C14.5546 23.6723 14.2287 24.3245 13.9471 25H13.9284H13.8614H13.7944H13.7275H13.6607H13.5939H13.5272H13.4605H13.3939H13.3274H13.2609H13.1946H13.1283H13.0621H12.9959H12.9298H12.8639H12.798H12.7322H12.6665H12.6008H12.5353H12.4699H12.4045H12.3393H12.2742H12.2091H12.1442H12.0794H12.0146H11.95H11.8856H11.8212H11.7569H11.6928H11.6288H11.5649H11.5011H11.4374H11.3739H11.3105H11.2473H11.1842H11.1212H11.0583H10.9956H10.9331H10.8706H10.8084H10.7462H10.6843H10.6224H10.5608H10.4993H10.4379H10.3767H10.3157H10.2548H10.1941H10.1336H10.0732H10.013H9.95298H9.89313H9.83346H9.77396H9.71466H9.65553H9.59658H9.53783H9.47926H9.42088H9.36271H9.30473H9.24693H9.18936H9.13196H9.07476H9.01778H8.96101H8.90446H8.84808H8.79196H8.73601H8.68031H8.62481H8.56953H8.51448H8.45966H8.40506H8.35068H8.29656H8.24263H8.18896H8.13551H8.08231H8.02936H7.97663H7.92416H7.87193H7.81996H7.76821H7.71673H7.66551H7.61453H7.56381H7.51336H7.46316H7.41323H7.36358H7.31418H7.26506H7.21618H7.16761H7.11931H7.07126H7.02351H6.97603H6.92886H6.88196H6.83533H6.78901H6.74296H6.69723H6.65178H6.60663H6.56176H6.51721H6.47296H6.42901H6.38538H6.34203H6.29903H6.25631H6.21391H6.17183H6.13008H6.08863H6.04753H6.00673H5.96626H5.92611H5.88631H5.84683H5.80768H5.76888H5.73041H5.69228H5.65448H5.61703H5.57993H5.54318H5.50678H5.47073H5.43503H5.39968H5.36471H5.33008H5.29581H5.26191H5.22836H5.19521H5.16238H5.12996H5.09791H5.06623H5.03491H5.00398H4.97343H4.94328H4.91351H4.88411H4.85511H4.82648H4.79828H4.77046H4.74301H4.71598H4.68936H4.66313H4.63731H4.61188H4.58688H4.56228H4.53808H4.51431H4.49096H4.46801H4.44548H4.42338H4.40173H4.38048H4.35966H4.33926H4.31931H4.29978H4.28068H4.26203H4.24381H4.22603H4.20871H4.19183H4.17538H4.15941H4.14386H4.12878H4.11416H4.09998H4.08628H4.07303H4.06023H4.04791H4.03606H4.02466H4.01376H4.00331H3.99333H3.98386H3.97483H3.96631H3.95823H3.95068C2.96311 25 2.06811 25.5812 1.66661 26.4835C0.884356 28.2415 0.406806 30.6755 0.174983 32.8955C-0.0571216 35.1183 -0.0819817 37.507 0.245081 39.219C0.774581 41.991 1.82091 44.4153 2.71058 46.1223C3.15916 46.9828 3.57748 47.6792 3.88843 48.167C4.04416 48.4115 4.17368 48.6048 4.26756 48.7413C4.31453 48.8095 4.35263 48.864 4.38073 48.9035L4.41521 48.9517L4.42656 48.9673L4.43071 48.973L4.43241 48.9752C4.43273 48.9757 4.43383 48.9773 6.45068 47.5L4.43241 48.9752C4.90328 49.6182 5.65383 50 6.45068 50V47.5C6.45068 50 6.45033 50 6.45068 50H6.45406H6.45926H6.47511L6.52808 49.9995C6.57266 49.9992 6.63553 49.9985 6.71521 49.9972C6.87448 49.9945 7.10123 49.9893 7.38306 49.9788C7.94566 49.958 8.73338 49.9165 9.64576 49.8335C11.4368 49.6707 13.8466 49.3365 15.9913 48.6217C17.8057 48.017 19.7914 47.211 21.3224 45.6017ZM15.5206 40.401C16.0418 41.1645 16.6265 41.8812 17.267 42.5437C16.6437 43.0235 15.7536 43.4305 14.4101 43.8783C12.8047 44.4135 10.8395 44.7043 9.19308 44.854C8.66743 44.9018 8.18838 44.934 7.78226 44.9557C7.59116 44.6347 7.37318 44.25 7.14443 43.8112C6.73356 43.023 6.29936 42.082 5.92343 41.0407L15.5206 40.401ZM18.4128 35.197L20.2158 35.0768L24.4463 30H24.4116H24.3631H24.3141H24.2648H24.2153H24.1656H24.1156H24.0653H24.0146H23.9638H23.9128H23.8616H23.8098H23.7581H23.7061H23.6536H23.6011H23.5483H23.4953H23.4421H23.3883H23.3346H23.2806H23.2263H23.1721H23.1173H23.0623H23.0073H22.9518H22.8963H22.8406H22.7846H22.7283H22.6718H22.6152H22.5584H22.5013H22.444H22.3866H22.3289H22.271H22.213H22.1547H22.0963H22.0376H21.9788H21.9198H21.8606H21.8012H21.7417H21.6819H21.622H21.5619H21.5017H21.4413H21.3807H21.3199H21.259H21.1979H21.1366H21.0752H21.0136H20.9519H20.89H20.828H20.7658H20.7035H20.641H20.5784H20.5156H20.4527H20.3897H20.3265H20.2632H20.1998H20.1362H20.0725H20.0087H19.9448H19.8807H19.8165H19.7522H19.6878H19.6233H19.5586H19.4939H19.429H19.364H19.299H19.2338H19.1685H19.1031H19.0377H18.9721H18.9064H18.8407H18.7748H18.7089H18.6429H18.5768H18.5106H18.4444H18.3781H18.3117H18.2452H18.1786H18.112H18.0453H17.9786H17.9118H17.8449H17.778H17.7694C17.7242 30.4103 17.701 30.8272 17.701 31.25C17.701 32.6387 17.9526 33.9688 18.4128 35.197ZM12.7484 30C12.717 30.4127 12.701 30.8295 12.701 31.25C12.701 32.7348 12.9001 34.173 13.2731 35.5395L5.00006 36.0913C5.00116 35.2855 5.04811 34.371 5.14796 33.4148C5.27961 32.154 5.48801 30.9685 5.73978 30H5.76888H5.80768H5.84683H5.88631H5.92611H5.96626H6.00673H6.04753H6.08863H6.13008H6.17183H6.21391H6.25631H6.29903H6.34203H6.38538H6.42901H6.47296H6.51721H6.56176H6.60663H6.65178H6.69723H6.74296H6.78901H6.83533H6.88196H6.92886H6.97603H7.02351H7.07126H7.11931H7.16761H7.21618H7.26506H7.31418H7.36358H7.41323H7.46316H7.51336H7.56381H7.61453H7.66551H7.71673H7.76821H7.81996H7.87193H7.92416H7.97663H8.02936H8.08231H8.13551H8.18896H8.24263H8.29656H8.35068H8.40506H8.45966H8.51448H8.56953H8.62481H8.68031H8.73601H8.79196H8.84808H8.90446H8.96101H9.01778H9.07476H9.13196H9.18936H9.24693H9.30473H9.36271H9.42088H9.47926H9.53783H9.59658H9.65553H9.71466H9.77396H9.83346H9.89313H9.95298H10.013H10.0732H10.1336H10.1941H10.2548H10.3157H10.3767H10.4379H10.4993H10.5608H10.6224H10.6843H10.7462H10.8084H10.8706H10.9331H10.9956H11.0583H11.1212H11.1842H11.2473H11.3105H11.3739H11.4374H11.5011H11.5649H11.6288H11.6928H11.7569H11.8212H11.8856H11.95H12.0146H12.0794H12.1442H12.2091H12.2742H12.3393H12.4045H12.4699H12.5353H12.6008H12.6665H12.7322H12.7484Z"/></svg>
+                </span>
+                Biblioteca
+            </button>
+            <button class="tab-item" data-view="creator-view">
+                <span class="icon">
+                    <!-- Ícone customizado: Lápis/Criação -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </span>
+                Criador
+            </button>
+        </nav>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    // === 4. LÓGICA E INTERATIVIDADE (JAVASCRIPT) ===
+    (() => {
+        'use strict';
 
-        // --- 3.0 DATA MODELS ---
-        const ROUTE_DATA = {
-            "slant": {
-                "id": "slant",
-                "name": "1. Slant",
-                "description": "A quick, three-step route cutting sharply inwards.",
-                "initialPositions": { "WR1": { "x": -20, "y": 0 }, "QB1": { "x": 0, "y": -5 }, "BALL": { "x": 0, "y": 0 } },
-                "path": [
-                    { "entityId": "WR1", "type": "line", "end": { "x": -20, "y": 3 }, "duration": 500 },
-                    { "entityId": "WR1", "type": "curve", "end": { "x": -10, "y": 13 }, "controlPoint": { "x": -20, "y": 8 }, "duration": 1200 }
-                ]
-            },
-            "hitch": {
-                "id": "hitch",
-                "name": "2. Hitch",
-                "description": "A short route where the receiver runs straight, then turns back towards the QB.",
-                "initialPositions": { "WR1": { "x": -20, "y": 0 }, "QB1": { "x": 0, "y": -5 }, "BALL": { "x": 0, "y": 0 } },
-                "path": [
-                    { "entityId": "WR1", "type": "line", "end": { "x": -20, "y": 5 }, "duration": 800 },
-                    { "entityId": "WR1", "type": "line", "end": { "x": -20, "y": 4 }, "duration": 600 }
-                ]
-            },
-            "post": {
-                "id": "post",
-                "name": "3. Post",
-                "description": "A deep route, cutting inwards toward the center of the field.",
-                "initialPositions": { "WR1": { "x": 25, "y": 0 }, "QB1": { "x": 0, "y": -5 }, "BALL": { "x": 0, "y": 0 } },
-                "path": [
-                    { "entityId": "WR1", "type": "line", "end": { "x": 25, "y": 12 }, "duration": 1500 },
-                    { "entityId": "WR1", "type": "line", "end": { "x": 5, "y": 32 }, "duration": 1800 }
-                ]
-            },
-            "fly": {
-                "id": "fly",
-                "name": "4. Fly / Go",
-                "description": "A straight deep route down the field.",
-                "initialPositions": { "WR1": { "x": -15, "y": 0 }, "QB1": { "x": 0, "y": -5 }, "BALL": { "x": 0, "y": 0 } },
-                "path": [
-                    { "entityId": "WR1", "type": "line", "end": { "x": -15, "y": 55 }, "duration": 4000 }
-                ]
-            },
-             "out": {
-                "id": "out",
-                "name": "5. Out",
-                "description": "Run straight, then a sharp 90-degree cut to the sideline.",
-                "initialPositions": { "WR1": { "x": -20, "y": 0 }, "QB1": { "x": 0, "y": -5 }, "BALL": { "x": 0, "y": 0 } },
-                "path": [
-                    { "entityId": "WR1", "type": "line", "end": { "x": -20, "y": 10 }, "duration": 1300 },
-                    { "entityId": "WR1", "type": "line", "end": { "x": -45, "y": 10 }, "duration": 1500 }
-                ]
-            }
-        };
+        // O conteúdo completo do manual
+        const manualContent = `
+            Parte 1: A Fundação da Grandeza: Posição (Stance) e Saída (Start)
+            O sucesso de um Wide Receiver (WR) em qualquer rota começa antes do snap. A fundação de toda a execução é a posição (stance) e a saída (start). Uma base falha leva a movimentos desperdiçados, o que destrói o timing da jogada e alerta o defensor (DB).
+            1.1 A Posição Perfeita (The Perfect Stance)
+            O objetivo da posição é criar uma plataforma para explosão em qualquer direção (vertical, interna, externa) sem "telegrafar" a intenção.
+            Mecânica (WR Externo - 3 Pontos Modificado):
+            Pés: O pé interno (inside foot) deve estar à frente. O peso deve ser carregado no arco (arch) do pé da frente (cerca de 60-70%). O pé de trás serve de equilíbrio, posicionado na ponta dos pés, pronto para impulsionar.
+            Nível (Pad Level): A mentalidade é "olhos sobre os dedos" (eyes over toes). O peito deve estar inclinado sobre o joelho da frente, e os joelhos devem estar dobrados. A posição deve se assemelhar a um power clean (arranque de potência), carregada e pronta para explodir, não para descansar.[1]
+            Mãos: As mãos devem estar relaxadas, mas prontas. "Mãos violentas" (violent hands) contra o press começam com uma posição relaxada que permite a reação mais rápida.[2]
+            Mecânica (Slot Receiver - 2 Pontos):
+            Posição: O WR do slot geralmente usa uma posição de 2 pontos (em pé). Isso permite uma melhor visão pré-snap dos Linebackers (LBs) e Safeties, facilitando a leitura de blitzes ou rotações de cobertura.
+            Variação de Peso: O peso pode ser 50/50 para rotas de opção e quebras rápidas, ou ligeiramente inclinado para a frente para releases verticais.
+            1.2 A Saída Explosiva (The Explosive Start)
+            O inimigo número um de um WR novato é o "Falso Passo" (False Step).[2] Qualquer movimento que não ganhe terreno (um passo para trás para "se arrumar", um passo lateral desnecessário) é um movimento desperdiçado.
+            Técnica: A saída deve ser uma impulsão simultânea de ambos os pés. O primeiro passo deve ganhar terreno, seja verticalmente contra off-coverage [3], ou lateralmente em um release calculado contra press.
+            Causa e Efeito: A saída dita o timing da jogada. Em um conceito de quick game (jogo rápido), o Quarterback (QB) está jogando a bola em um local e tempo específicos. Se um Slant de 3 passos leva 4 passos para ser executado por causa de uma saída lenta, a bola será interceptada ou cairá no chão.
+            Parte 2: Vencendo na Linha de Scrimmage: O Manual de Releases
+            Vencer o press coverage é uma mentalidade. O DB está tentando ditar os termos da jogada; o release é o WR tomando esse controle de volta. O objetivo não é desviar do DB; é derrotá-lo.[2]
+            2.1 Lendo o Leverage (Vantagem) do Defensor
+            Antes do snap, o WR deve diagnosticar o leverage (a vantagem de posição) do DB. Isso informa qual ferramenta (release) usar.
+            Inside Shade (Sombra Interna): O DB está alinhado por dentro do WR. Ele está protegendo o Slant e o Post. Ele está dando ao WR a rota Fade (vertical externa).
+            Outside Shade (Sombra Externa): O DB está alinhado por fora do WR. Ele está protegendo o Fade e o Out. Ele está dando ao WR o Slant.
+            Head-up (De Frente): O DB está neutro, tentando forçar o WR a declarar sua intenção primeiro.
+            2.2 Biblioteca de Releases Físicos (Contra Press-Man)
+            O objetivo contra press-man é recriar a linha de scrimmage e "empilhar" (stack) o DB—colocando-se diretamente na frente dele.
+            Técnicas de Mão (Hand Techniques):
+            A primeira fase do release envolve "pés violentos" e "mãos violentas" para derrotar o jam (o soco) do DB.[2]
+            Double Hand SWAT [2]: A técnica fundamental. Quando o DB atira as duas mãos (o punch), o WR usa um "swat" (um tapa) violento e simultâneo para limpar as duas mãos. Imediatamente após o contato, o WR deve acelerar.
+            Clip and Rip [2]: Usado quando o DB tenta um jam com uma mão. O WR usa sua mão interna para "grampear" (clip) o pulso ou cotovelo do DB contra seu próprio corpo, e então "rasga" (rip) seu braço externo por baixo (como um uppercut) para passar. Ao fazer isso, o WR deve "ficar o mais fino possível" (get as skinny as possible) para reduzir a área de superfície.[3]
+            Clip, Drop, Pull [2]: Uma variação onde o WR agarra o braço do DB e o puxa para passar, usando o ímpeto do defensor contra ele mesmo.
+            Técnicas de Corpo (Downfield):
+            Arm Bar (Barra de Braço) [2]: Quando o DB está correndo no quadril (hip) do WR, o WR pode usar um "arm bar" firme para criar espaço no ponto de recepção (catch point). No entanto, isso deve ser usado com moderação; limitado a dois "arm bars" por rota. Se o WR está lutando o campo todo, ele já perdeu.[2]
+            O "Stack" (Empilhamento) [2]: Este é o objetivo final de todo release vertical. Após vencer o DB na linha (1-3 jardas), o objetivo é "empilhar"—correr diretamente na frente do DB, colocando-o na "trilha de poeira" do WR. Uma vez empilhado, o WR controla a rota; o DB está em modo reativo e não sabe se a rota quebrará para dentro, para fora, ou continuará funda.[2]
+            2.3 Biblioteca de Releases de Finesse (Contra Off-Man / Soft Press)
+            Contra cobertura off (recuada) ou soft press, o objetivo é a decepção: fazer o DB "morder" uma rota falsa ou "virar os quadris" (flip his hips) na direção errada.
+            Dive Release [30]: Este release vende agressivamente uma rota cruzada (como Drag ou Slant) para fazer o DB morder para dentro, permitindo que o WR acelere verticalmente por fora.
+            Chaves para Vender [30]: 1. Correr forte (full speed). 2. Correr em passos largos (full stride)—ninguém corre um drag com passos curtos. 3. Comprometer o pad level e a linguagem corporal para vender a rota interna.
+            Blade Release [4]: Usado para evitar totalmente o contato. O WR usa uma leve mudança de velocidade na linha e, no momento do punch do DB, "tira o ombro" (take your shoulder away), reduzindo a área de superfície.[2] O DB erra o alvo, e o WR está livre.
+            Split Release: Um release de 1-2 passos (interno-externo ou externo-interno) para forçar o DB a "abrir os pés".[5] O objetivo é fazer o DB "abrir o portão" (open the gate) para um lado, criando um caminho limpo para o WR atacar o leverage oposto.
+            Tabela 1: Matriz de Seleção de Release
+            Se o DB está...|E sua Rota é...|Sua Ferramenta (Release) é...
+            Press, Inside Shade|Fade / Go Route|Split Release (para fora), seguido de SWAT/Rip para empilhar.
+            Press, Outside Shade|Fade / Go Route|Split Release (para dentro), seguido de SWAT/Rip para empilhar.
+            Press, Outside Shade|Slant|Diamond Release (3 passos para o ombro externo) ou Dive Release (ataca a face).
+            Press, Inside Shade|Post|Ataca o leverage (para dentro) para fazê-lo morder, depois Rip por cima para empilhar.
+            Off-Man (Recuado)|Go / Fade|Ataque o "cushion" (almofada/espaço) dele, depois use o Blade Release [4] no topo.
+            Off-Man (Recuado)|Comeback|Ataque o "cushion" verticalmente para fazê-lo virar os quadris, então quebre.
+            Parte 8: Conclusão
+            A transformação de um "novato" em um "Wide Receiver de elite" é uma jornada de duas partes. A primeira parte é a maestria física: aperfeiçoar a posição, a saída, o release e a mecânica de cada rota até que sejam executados sem pensamento consciente.
+            A segunda, e mais crítica, parte é a maestria tática. É a transição de um atleta para um estrategista em campo. Um WR de elite entende que ele não está apenas correndo um Slant. Ele está executando um Slant que se torna um Sight Adjustment contra uma Fire Zone, ou que deve ser achatado (flattened) contra um LB em Cover 2. Ele entende como sua rota se encaixa no quebra-cabeça maior e como usar as regras de defesas complexas, como a Cover 3 Match, contra elas.[25]
+            A verdadeira grandeza é alcançada quando a preparação física encontra a inteligência tática, permitindo que o WR jogue em velocidade máxima, com confiança total, sabendo que ele tem a ferramenta certa para cada problema que a defesa apresentar.
+        `;
 
-        // --- GLOBAL STATE & CACHE ---
-        const appState = {
-            currentRouteId: null,
-            entities: {},
-        };
-        const domCache = {
-            fieldWrapper: document.getElementById('field-wrapper'),
-            infoDisplay: document.getElementById('info-display'),
-            routeSelector: document.getElementById('route-selector'),
-        };
+        // Cache de elementos do DOM
+        const tabItems = document.querySelectorAll('.tab-item');
+        const views = document.querySelectorAll('.view');
+        const theoryContainer = document.getElementById('theory-view');
 
-        // --- 2.1 FieldCanvas Coordinate System ---
-        const world = {
-            width: 106.6, // (53.3 * 2)
-            height: 70,   // Displaying from y=-10 to y=60
-            yOffset: 10,
-            xCenter: 53.3
-        };
-        let pixelDimensions = { width: 0, height: 0 };
-
-        function updatePixelDimensions() {
-            const rect = domCache.fieldWrapper.getBoundingClientRect();
-            pixelDimensions.width = rect.width;
-            pixelDimensions.height = rect.height;
-        }
-
-        function worldToPixels({ x, y }) {
-            const px = ((x + world.xCenter) / world.width) * pixelDimensions.width;
-            const py = ((y + world.yOffset) / world.height) * pixelDimensions.height;
-            return { x: px, y: py };
-        }
-
-        // --- 2.2 PlayerEntity Component ---
-        class PlayerEntity {
-            constructor(id, role) {
-                this.id = id;
-                this.role = role;
-                this.position = { x: 0, y: 0 };
-                this.element = this._createDOMElement();
-                domCache.fieldWrapper.appendChild(this.element);
-            }
-
-            _createDOMElement() {
-                const div = document.createElement('div');
-                div.id = this.id;
-                div.className = 'entity';
-                
-                const templateId = this.role === 'BALL' ? 'svg-ball' : 'svg-helmet';
-                const svg = document.getElementById(templateId).cloneNode(true);
-                
-                if (this.role !== 'BALL') {
-                    const color = this.role === 'WR' ? 'var(--wr-color)' : 'var(--qb-color)';
-                    svg.querySelector('path').setAttribute('fill', color);
-                }
-                
-                div.appendChild(svg);
-                return div;
-            }
-
-            setPosition(worldPos) {
-                this.position = worldPos;
-                const pixelPos = worldToPixels(worldPos);
-                this.element.style.transform = `translate(${pixelPos.x}px, ${pixelPos.y}px)`;
-            }
-
-            setOpacity(val) {
-                this.element.style.opacity = val;
-            }
-        }
-        
-        // --- 2.3 RouteAnimator Engine ---
-        const RouteAnimator = (() => {
-            let animationFrameId;
-            let timeline = [];
-            let startTime = 0;
-
-            const lerp = (start, end, t) => start + (end - start) * t;
-            const quadraticBezier = (start, control, end, t) => {
-                const invT = 1 - t;
-                return invT * invT * start + 2 * invT * t * control + t * t * end;
-            };
-
-            function animate(timestamp) {
-                if (!startTime) startTime = timestamp;
-                const elapsedTime = timestamp - startTime;
-
-                timeline.forEach(anim => {
-                    if (elapsedTime >= anim.startTime && elapsedTime <= anim.endTime) {
-                        const segmentProgress = (elapsedTime - anim.startTime) / anim.duration;
-                        let newPos = {};
-
-                        if (anim.type === 'line') {
-                            newPos.x = lerp(anim.startPos.x, anim.endPos.x, segmentProgress);
-                            newPos.y = lerp(anim.startPos.y, anim.endPos.y, segmentProgress);
-                        } else if (anim.type === 'curve') {
-                            newPos.x = quadraticBezier(anim.startPos.x, anim.controlPoint.x, anim.endPos.x, segmentProgress);
-                            newPos.y = quadraticBezier(anim.startPos.y, anim.controlPoint.y, anim.endPos.y, segmentProgress);
-                        } else if (anim.type === 'snap') {
-                            newPos.x = lerp(anim.startPos.x, anim.endPos.x, segmentProgress);
-                            newPos.y = lerp(anim.startPos.y, anim.endPos.y, segmentProgress);
-                        }
-                        
-                        if (anim.entity) anim.entity.setPosition(newPos);
-
-                        if (anim.type === 'snap' && segmentProgress >= 0) {
-                             appState.entities.BALL.setOpacity(1);
-                        }
-                    }
-                });
-
-                if (elapsedTime < timeline[timeline.length - 1]?.endTime || 0) {
-                    animationFrameId = requestAnimationFrame(animate);
-                } else {
-                     // Hide ball after play
-                     if (appState.entities.BALL) appState.entities.BALL.setOpacity(0);
-                }
-            }
-
-            function play(route) {
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-
-                // Reset all entities to initial positions
-                for (const entityId in route.initialPositions) {
-                    if(appState.entities[entityId]) {
-                        appState.entities[entityId].setPosition(route.initialPositions[entityId]);
-                    }
-                }
-
-                timeline = [];
-                let currentTime = 0;
-
-                // T=100ms: Snap Animation
-                const snapStartTime = 100;
-                const snapDuration = 250;
-                const ballStartPos = route.initialPositions.BALL;
-                const qbPos = route.initialPositions.QB1;
-                timeline.push({
-                    type: 'snap',
-                    entity: appState.entities.BALL,
-                    startPos: ballStartPos,
-                    endPos: qbPos,
-                    startTime: snapStartTime,
-                    duration: snapDuration,
-                    endTime: snapStartTime + snapDuration,
-                });
-                currentTime = snapStartTime + snapDuration; // 350ms
-
-                // T=350ms: Route Execution
-                route.path.forEach(segment => {
-                    const entity = appState.entities[segment.entityId];
-                    if (!entity) return;
-
-                    const segmentStartPos = timeline.filter(s => s.entity === entity).pop()?.endPos || route.initialPositions[segment.entityId];
-                    
-                    const animSegment = {
-                        entity: entity,
-                        type: segment.type,
-                        startPos: segmentStartPos,
-                        endPos: segment.end,
-                        duration: segment.duration,
-                        startTime: currentTime,
-                        endTime: currentTime + segment.duration,
-                    };
-
-                    if (segment.type === 'curve') {
-                        animSegment.controlPoint = segment.controlPoint;
-                    }
-
-                    timeline.push(animSegment);
-                    currentTime += segment.duration;
-                });
-
-                startTime = 0;
-                animationFrameId = requestAnimationFrame(animate);
-            }
-
-            return { play };
-        })();
-
-
-        // --- 2.4 UIController ---
-        const UIController = (() => {
-            function init(routes, onSelect) {
-                const selector = domCache.routeSelector;
-                selector.innerHTML = '';
-                Object.values(routes).forEach(route => {
-                    const button = document.createElement('button');
-                    button.className = 'route-button';
-                    button.textContent = route.name;
-                    button.dataset.routeId = route.id;
-                    button.addEventListener('click', () => onSelect(route.id));
-                    selector.appendChild(button);
-                });
-            }
-
-            function update(routeId) {
-                const route = ROUTE_DATA[routeId];
-                domCache.infoDisplay.textContent = route.name;
-                document.querySelectorAll('.route-button').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.routeId === routeId);
-                });
-            }
-
-            return { init, update };
-        })();
-
-        // --- MAIN APP LOGIC ---
-        function handleRouteSelection(routeId) {
-            if (appState.currentRouteId === routeId) return; // Prevent re-running same route
-            appState.currentRouteId = routeId;
-            const route = ROUTE_DATA[routeId];
-            UIController.update(routeId);
-            RouteAnimator.play(route);
-        }
-
+        /**
+         * Inicializa o aplicativo: configura os listeners e renderiza o conteúdo inicial.
+         */
         function init() {
-            // Recalculate dimensions on resize for responsiveness
-            window.addEventListener('resize', updatePixelDimensions);
-            updatePixelDimensions();
-
-            // Create Player Entities
-            appState.entities.WR1 = new PlayerEntity('WR1', 'WR');
-            appState.entities.QB1 = new PlayerEntity('QB1', 'QB');
-            appState.entities.BALL = new PlayerEntity('BALL', 'BALL');
-            
-            // Setup UI
-            UIController.init(ROUTE_DATA, handleRouteSelection);
-
-            // Set initial state to the first route
-            const firstRouteId = Object.keys(ROUTE_DATA)[0];
-            appState.currentRouteId = firstRouteId;
-            const firstRoute = ROUTE_DATA[firstRouteId];
-
-            for (const entityId in firstRoute.initialPositions) {
-                appState.entities[entityId].setPosition(firstRoute.initialPositions[entityId]);
-            }
-            UIController.update(firstRouteId);
-            
-            // Auto-play the first route after a short delay
-            setTimeout(() => RouteAnimator.play(firstRoute), 500);
+            setupEventListeners();
+            parseAndRenderTheory();
+            registerServiceWorker();
         }
-        
-        // --- 5.0 PWA Service Worker Registration ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(registration => console.log('Service Worker registered successfully:', registration))
-                    .catch(error => console.log('Service Worker registration failed:', error));
+
+        /**
+         * Configura os listeners de clique para a barra de navegação.
+         */
+        function setupEventListeners() {
+            tabItems.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetViewId = tab.dataset.view;
+                    switchView(targetViewId);
+                });
             });
         }
 
-        init();
-    });
+        /**
+         * Alterna a visualização ativa com base no ID fornecido.
+         * @param {string} targetViewId - O ID da view a ser ativada.
+         */
+        function switchView(targetViewId) {
+            // Atualiza o estado das views
+            views.forEach(view => {
+                view.classList.toggle('active', view.id === targetViewId);
+            });
 
-    /*
-    ================================================================================
-    FILE: service-worker.js
-    ================================================================================
-    NOTE: For the PWA to work, this code MUST be in a separate file named 'service-worker.js'
-    in the same directory as the index.html file.
-    --------------------------------------------------------------------------------
-    
-    const CACHE_NAME = 'routemaster-v1.0';
-    const ASSETS_TO_CACHE = [
-        '/',
-        'index.html',
-        // Add paths to your CSS and JS if they were separate files
-        // 'main.css',
-        // 'app.js',
-        // 'manifest.json',
-        // Add paths to any icon files
-        // 'icon-192x192.png'
-    ];
+            // Atualiza o estado dos botões da tab bar
+            tabItems.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.view === targetViewId);
+            });
 
-    // Install event: cache all critical assets
-    self.addEventListener('install', event => {
-        event.waitUntil(
-            caches.open(CACHE_NAME)
-                .then(cache => {
-                    console.log('Opened cache');
-                    return cache.addAll(ASSETS_TO_CACHE);
-                })
-        );
-    });
-
-    // Fetch event: serve from cache first, then network
-    self.addEventListener('fetch', event => {
-        event.respondWith(
-            caches.match(event.request)
-                .then(response => {
-                    // Cache hit - return response
-                    if (response) {
-                        return response;
-                    }
-                    // Not in cache - fetch from network
-                    return fetch(event.request);
-                })
-        );
-    });
-
-    // Activate event: clean up old caches
-    self.addEventListener('activate', event => {
-        const cacheWhitelist = [CACHE_NAME];
-        event.waitUntil(
-            caches.keys().then(cacheNames => {
-                return Promise.all(
-                    cacheNames.map(cacheName => {
-                        if (cacheWhitelist.indexOf(cacheName) === -1) {
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
-            })
-        );
-    });
-    
-    */
-
-    /*
-    ================================================================================
-    FILE: manifest.json
-    ================================================================================
-    NOTE: For the PWA to work, this code MUST be in a separate file named 'manifest.json'
-    in the same directory as the index.html file.
-    --------------------------------------------------------------------------------
-
-    {
-      "name": "RouteMaster PWA",
-      "short_name": "RouteMaster",
-      "description": "A professional training utility for American Football wide receiver routes.",
-      "start_url": ".",
-      "display": "standalone",
-      "background_color": "#000000",
-      "theme_color": "#0a3c0a",
-      "orientation": "portrait-primary",
-      "icons": [
-        {
-          "src": "icon-192x192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        },
-        {
-          "src": "icon-512x512.png",
-          "sizes": "512x512",
-          "type": "image/png"
+            // Garante que a nova view comece do topo ao ser exibida
+            const activeView = document.getElementById(targetViewId);
+            if(activeView) activeView.scrollTop = 0;
         }
-      ]
-    }
-    
-    */
+
+        /**
+         * Analisa o texto do manual e o renderiza como HTML na view de teoria.
+         */
+        function parseAndRenderTheory() {
+            const lines = manualContent.trim().split('\n');
+            let html = '';
+            let inTable = false;
+            
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                // Transforma as referências [X] em spans estilizados
+                line = line.replace(/\[(\d+)\]/g, '<span class="reference">$1</span>');
+                
+                if (line.startsWith('Parte ')) {
+                    if (inTable) { html += '</tbody></table>'; inTable = false; }
+                    html += `<h1>${line.replace('Parte ', 'Parte ')}</h1>`;
+                } else if (line.match(/^\d+\.\d+\s/)) {
+                    if (inTable) { html += '</tbody></table>'; inTable = false; }
+                    html += `<h2>${line}</h2>`;
+                } else if (line.startsWith('Tabela ')) {
+                    if (inTable) { html += '</tbody></table>'; }
+                    html += `<h3>${line}</h3>`;
+                } else if (line.includes('|')) {
+                    const cells = line.split('|');
+                    if (!inTable) {
+                        html += '<table><thead><tr>';
+                        cells.forEach(cell => html += `<th>${cell.trim()}</th>`);
+                        html += '</tr></thead><tbody>';
+                        inTable = true;
+                    } else {
+                        html += '<tr>';
+                        cells.forEach(cell => html += `<td>${cell.trim()}</td>`);
+                        html += '</tr>';
+                    }
+                } else {
+                     if (inTable && !line.includes('|')) {
+                        html += '</tbody></table>';
+                        inTable = false;
+                    }
+                    // Mantém a formatação de termos importantes em negrito
+                    line = line.replace(/\b([A-Z][a-zA-Z\s-]+[a-zA-Z])\b/g, (match, p1) => {
+                        // Lista de palavras a não colocar em negrito (ex: nomes próprios, início de frase)
+                        const exceptions = ["O", "A", "Se", "Contra", "Quando"];
+                        if(exceptions.includes(p1.split(' ')[0])) return p1;
+                        return `<strong>${p1}</strong>`;
+                    });
+                     html += `<p>${line}</p>`;
+                }
+            });
+
+            if (inTable) {
+                html += '</tbody></table>';
+            }
+
+            theoryContainer.innerHTML = html;
+        }
+
+        /**
+         * Registra o Service Worker para funcionalidades PWA.
+         */
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        })
+                        .catch(error => {
+                            console.log('ServiceWorker registration failed: ', error);
+                        });
+                });
+            }
+        }
+
+        // Inicia o aplicativo quando o DOM estiver pronto.
+        document.addEventListener('DOMContentLoaded', init);
+
+    })();
     </script>
 </body>
 </html>
